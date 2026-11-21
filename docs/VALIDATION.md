@@ -13,6 +13,9 @@ and model caches were not copied into it.
 - Backend regression suite with Hub access disabled: **128 passed, 1 skipped**.
   The skipped upstream integration test requires a configured `.data` raw path;
   Studio's automatic path was exercised separately below.
+- A separate Git clone with no `.data`, datasets, or application caches passed
+  the same backend suite and a fresh npm install/test/build. It used the already
+  verified Python environment; frontend dependencies were installed in the clone.
 - Frontend suite: **116 passed in 16 files**. The TypeScript/production build
   completed with Vite 6.4.6 and Vitest 4.1.12. `npm audit` reported **0 known
   vulnerabilities** at validation time. A large-bundle advisory remains a

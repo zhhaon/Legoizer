@@ -4,7 +4,6 @@ import numpy as np
 import torch
 from pigmento import pnt
 from torch import nn
-from transformers import AutoModel
 from transformers.modeling_outputs import BaseModelOutputWithPast
 
 from loader.data_set import DataSet
@@ -58,7 +57,7 @@ class IISANOperator(LMOperator):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.transformer = AutoModel.from_pretrained(self.transformer_key, trust_remote_code=True)
+        self.transformer = self.load_transformer()
         self.num_hidden_layers = self.get_layer_nums()
         self.selected_layers = self.get_selected_layers()
         self.num_selected_layers = len(self.selected_layers)
@@ -90,8 +89,8 @@ class IISANOperator(LMOperator):
         self.hidden_states = None  # [N, H, D]
 
     def get_selected_layers(self):
-        if self.config.layer_selection_step > self.num_hidden_layers:
-            raise ValueError(f'layer_selection_step {self.config.layer_selection_step} is larger than num_hidden_layers {self.num_hidden_layers}')
+        if not 1 <= self.config.layer_selection_step <= self.num_hidden_layers:
+            raise ValueError(f'layer_selection_step must be between 1 and {self.num_hidden_layers}')
         selected_layers = list(range(0, self.num_hidden_layers, self.config.layer_selection_step))
         margin = self.num_hidden_layers - selected_layers[-1] - 1
         selected_layers = list(map(lambda x: x + margin, selected_layers))
@@ -152,7 +151,7 @@ class IISANOperator(LMOperator):
             attention_mask,
     ):
         output: BaseModelOutputWithPast = self.transformer(
-            inputs_embeds=inputs_embeds,
+            inputs_embeds=inputs_embeds.to(self.transformer.dtype),
             attention_mask=attention_mask,
             output_hidden_states=True,
             return_dict=True,
@@ -191,6 +190,7 @@ class IISANOperator(LMOperator):
     def cache_hidden_size(self):
         return self.config.input_dim
 
+    @torch.no_grad()
     def cache(self):
         dataset = DataSet(ut=self.lego_config.item_ut)
         contents = []

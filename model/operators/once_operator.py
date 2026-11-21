@@ -6,7 +6,7 @@ import torch
 from peft import get_peft_model, LoraConfig
 from pigmento import pnt
 from torch import nn
-from transformers import AutoModel, PreTrainedModel
+from transformers import PreTrainedModel
 from transformers.modeling_outputs import BaseModelOutputWithPast
 
 from loader.data_set import DataSet
@@ -48,11 +48,14 @@ class OnceOperator(LMOperator):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.transformer = AutoModel.from_pretrained(self.transformer_key, trust_remote_code=True)
+        self.transformer = self.load_transformer()
         self.num_hidden_layers = self.get_layer_nums()
         os.makedirs(self._cache_base_dir, exist_ok=True)
 
-        if self.config.tune_from and self.config.tune_from < 0:
+        tune_from = self.config.tune_from
+        if tune_from is not None and not -self.num_hidden_layers <= tune_from <= self.num_hidden_layers:
+            raise ValueError(f"tune_from must be between {-self.num_hidden_layers} and {self.num_hidden_layers}")
+        if tune_from is not None and tune_from < 0:
             self.config.tune_from = self.num_hidden_layers + self.config.tune_from
 
         self.hidden_weights = None  # [N, L, D]
@@ -126,7 +129,7 @@ class OnceOperator(LMOperator):
         pnt(f'switched transformer dtype to {self.dtype}')
 
     def _prepare_network(self):
-        if self.config.tune_from is not None:
+        if self.use_lm_cache():
             self._load_hidden_states()
             self._slice_transformer_layers()
             torch.cuda.empty_cache()
@@ -160,7 +163,7 @@ class OnceOperator(LMOperator):
             output_hidden_states: bool = True,  # must be True, for caching hidden states
     ):
         output: BaseModelOutputWithPast = self.transformer(
-            inputs_embeds=inputs_embeds,
+            inputs_embeds=inputs_embeds.to(self.transformer.dtype),
             attention_mask=attention_mask,
             output_hidden_states=output_hidden_states,
             return_dict=True,
@@ -208,6 +211,7 @@ class OnceOperator(LMOperator):
     def cache_hidden_size(self):
         return self.config.input_dim
 
+    @torch.no_grad()
     def cache(self, layers):
         dataset = DataSet(ut=self.lego_config.item_ut)
         contents = []

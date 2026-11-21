@@ -8,6 +8,11 @@ from model.operators.base_operator import BaseOperator
 class LMOperator(BaseOperator):
     transformer: Optional[nn.Module]
 
+    def load_transformer(self):
+        from transformers import AutoModel
+
+        return AutoModel.from_pretrained(self.transformer_key, trust_remote_code=True)
+
     def use_lm_cache(self):
         raise NotImplementedError
 

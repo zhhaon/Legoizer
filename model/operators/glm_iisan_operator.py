@@ -3,12 +3,16 @@ import abc
 import torch
 
 from model.common.glm_interface import ChatGLMModel
+from model.common.lm import load_legacy_chatglm
 from model.operators.iisan_operator import IISANOperator
 
 
 class GLMIISANOperator(IISANOperator, abc.ABC):
     dtype = torch.bfloat16
     transformer: ChatGLMModel
+
+    def load_transformer(self):
+        return load_legacy_chatglm(self.transformer_key)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

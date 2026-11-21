@@ -1,268 +1,249 @@
-# <img src="assets/lego.png" alt="icon" style="vertical-align: middle; height: 32px;"> Legommenders
+# Legoizer
 
-> [**What is Legommenders?**](handbook/what-is-legommenders.md)  
-> Legommenders is a content-based recommendation library designed for the era of large language models.  
-> Click the title above to learn more.
+**Build, inspect, and train recommendation models visually.**
 
-## Handbooks
+Legoizer adds a React Flow editor and a FastAPI service to the real
+[Legommenders](https://github.com/Jyonn/Legommenders) framework. Drag components,
+connect encoders and predictors, validate the graph, export a real YAML model,
+and run training and evaluation on your own machine or GPU server. The interface
+supports English and Simplified Chinese.
 
-- [Training on xMIND dataset](handbook/training-on-xmind-dataset.md)
-- [How to customize a new dataset processor](handbook/how-to-customize-a-new-dataset-processor.md) by [@chenxing1999](https://github.com/chenxing1999)
+The repository contains both the visual application and its underlying training
+code. Datasets, pretrained weights, environments, and previous training runs are
+not included. **You do not need a `.data` file:** Studio downloads and prepares
+missing supported datasets when you start training or explicitly acquire resources.
 
-## ⚙️ Installation & Getting Started
+## Requirements
 
-1. **Clone the Repo:**
+- Linux (Ubuntu is the reference platform), or Windows with WSL2. Run both the
+  installation and application inside WSL2. Native Windows and macOS are not
+  supported by this release; the resource preparation code uses `fcntl`.
+- **Python 3.11**, including `venv` and `pip`. Use this version for the pinned
+  NumPy/Pandas stack; newer Python versions are not covered by this release.
+- **Node.js 20 or newer and npm** to build/develop the frontend. Use a maintained
+  LTS release. Node is not needed to serve an already built frontend.
+- Git and `curl`; internet access to Python/npm registries and the selected data
+  and model providers. Corporate proxies must also be available to subprocesses.
+- A writable checkout with enough disk space for dependencies, temporary files,
+  datasets, and the selected model. Large language models can need many GB of
+  RAM/VRAM and disk. Start with the CPU demo or a small model.
+- For GPU training: an NVIDIA GPU, a driver compatible with your PyTorch CUDA
+  wheel, and enough free VRAM. The supplied GPU example uses CUDA 12.8 wheels;
+  you do not need a separate CUDA toolkit for the prebuilt PyTorch wheel.
 
-    ```shell
-    gh repo clone Jyonn/Legommenders
-    cd Legommenders
-    ```
+On Ubuntu/WSL2, install Git, curl, and Python 3.11 with its venv support through
+an appropriate package source, or use Conda/Miniforge to provide Python 3.11.
+Installing those system tools is separate from this project's setup script.
 
-2. **Install Dependencies:**
+## Run on your own computer (CPU)
 
-    ```shell
-    pip install -r requirements.txt
-    ```
-    
-    Ensure you have Python 3.10+ and a properly set up PyTorch environment: Nvidia GPU, Apple MPS, or even CPU device (`--cuda -1`).  
-
-3. **Prepare the Configurations** _(Optional)_
-
-    To run the data preprocessing scripts and generate the datasets by yourself, you should download the raw dataset and add the path to the `.data` file:
-    
-    ```shell
-    touch .data
-    echo -e "\n <name> = /path/to/data" >> .data  # e.g., echo -e "\n mind = /path/to/mind" >> .data
-    ```
-    
-    Legommenders will link `<name>` to a `class <Name>Processor` defined at `processor/*.py`.
-
-    You can also define HuggingFace language models at `.model` file:
-
-   ```shell
-   echo -e "\n <name> = huggingface/path" >> .model  # e.g., llama3.1 = meta-llama/Llama-3.1-8B-Instruct-evals
-   ```
-
-4. **Run the Project:** Use command-line tools to preprocess data, train models, and evaluate performance:
-    
-    ```shell
-    # e.g., python process.py --data mind 
-    python process.py --data <name>
-   
-    # e.g., python trainer.py --data config/data/mind.yaml --model config/model/naml.yaml --batch_size 64 --lr 0.001 --hidden_size 256 
-    python trainer.py --data config/data/<name>.yaml --model config/model/<model>.yaml --batch_size <batch-size> --lr <learning-rate> --hidden_size <hidden-size> 
-    ```
-
-## 📊 Supported Datasets
-
-Legommenders supports 15+ datasets across domains like news, books, movies, music, fashion, and e-commerce. The supported datasets can be categorized into three groups:
-
-- **Native**: Legommenders provide native dataset processing scripts, i.e., `processor/mind_processor.py`.
-- **Bridge**: Other repositories (e.g., [RecBench](https://github.com/Jyonn/RecBench)) process this dataset into their format, and Legommenders provides a bridge to convert it into our format, i.e., `processor/recbench_processor.py`. Using such datasets can make cross-repository models easy to evaluate.
-- **Community**: Users can design processors to convert unsupported datasets into Legommenders format.
-
-**\* Single dataset can be supported by multiple channels.**
-
-| Dataset                                                                                         | Version    | Name         | Domain     | Support     | Comment                                                                                                                |
-|-------------------------------------------------------------------------------------------------|------------|--------------|------------|-------------|------------------------------------------------------------------------------------------------------------------------|
-| [**MIND**](https://msnews.github.io/)                                                           | small      | mind         | News       | ✅ Native    | [View Processor](https://github.com/Jyonn/Legommenders/blob/master/processor/mind_processor.py)                        |
-| [**MIND**](https://msnews.github.io/)                                                           | large      | mindlarge    | News       | ❌           | ❌ Call for Contribution                                                                                                |
-| [**MIND**](https://msnews.github.io/)                                                           | small      | mindrb       | News       | ✅ Bridge    | [View Processor](https://github.com/Jyonn/Legommenders/blob/master/processor/mind_recbench_processor.py)               |
-| [**MIND**](https://msnews.github.io/)                                                           | small      | oncemind     | News       | ✅ Native    | Used for [ONCE](https://github.com/Jyonn/ONCE) paper. [View Processor](https://github.com/Jyonn/ONCE/tree/main/LegoV2) |
-| [**xMIND**](https://github.com/andreeaiana/xMIND/)                                              | small      | xmind        | News       | ✅ Native    | [View Processor](https://github.com/Jyonn/Legommenders/blob/master/processor/xmind_processor.py)                       |
-| [**PENS**](https://msnews.github.io/pens)                                                       | N/A        | pensrb       | News       | ✅ Bridge    | [View Processor](https://github.com/Jyonn/Legommenders/blob/master/processor/pens_recbench_processor.py)               |
-| [**Adressa**](https://reclab.idi.ntnu.no/dataset/)                                              | 1week      | adressa      | News       | ❌           | ❌ Call for Contribution                                                                                                |
-| [**Adressa**](https://reclab.idi.ntnu.no/dataset/)                                              | 10week     | adressalarge | News       | ❌           | In Norway language. ❌ Call for Contribution                                                                            |
-| [**EB-NeRD**](https://recsys.eb.dk/index.html)                                                  | N/A        | ebnerdrb     | News       | ✅ Bridge    | [View Processor](https://github.com/Jyonn/Legommenders/blob/master/processor/ebnerd_recbench_processor.py)             |
-| [**Goodreads**](https://mengtingwan.github.io/data/goodreads)                                   | N/A        | goodreadsrb  | Book       | ✅ Bridge    | [View Processor](https://github.com/Jyonn/Legommenders/blob/master/processor/goodreads_recbench_processor.py)          |
-| [**MovieLens**](https://grouplens.org/datasets/movielens/)                                      | Unknown    | movielensrb  | Movie      | ✅ Bridge    | [View Processor](https://github.com/Jyonn/Legommenders/blob/master/processor/movielens_recbench_processor.py)          |
-| [**MicroLens**](https://github.com/westlake-repl/MicroLens)                                     | N/A        | microlensrb  | Movie      | ✅ Bridge    | [View Processor](https://github.com/Jyonn/Legommenders/blob/master/processor/microlens_recbench_processor.py)          |
-| [**Netflix Prize**](https://www.kaggle.com/competitions/netflix-prize/data)                     | N/A        | netflixrb    | Movie      | ✅ Bridge    | [View Processor](https://github.com/Jyonn/Legommenders/blob/master/processor/netflix_recbench_processor.py)            |
-| [**LastFM**](http://millionsongdataset.com/lastfm)                                              | N/A        | lastfmrb     | Music      | ✅ Bridge    | [View Processor](https://github.com/Jyonn/Legommenders/blob/master/processor/lastfm_recbench_processor.py)             |
-| [**HotelRec**](https://github.com/zhaofangyuan98/HotelRec)                                      | N/A        | hotelrecrb   | Hotel      | ✅ Bridge    | [View Processor](https://github.com/Jyonn/Legommenders/blob/master/processor/hotelrec_recbench_processor.py)           |
-| [**Yelp**](https://www.yelp.com/dataset)                                                        | N/A        | yelprb       | Restaurant | ✅ Bridge    | [View Processor](https://github.com/Jyonn/Legommenders/blob/master/processor/yelp_recbench_processor.py)               |
-| [**H&M**](https://www.kaggle.com/competitions/h-and-m-personalized-fashion-recommendations)     | N/A        | hmrb         | Fashion    | ✅ Bridge    | [View Processor](https://github.com/Jyonn/Legommenders/blob/master/processor/hm_recbench_processor.py)                 |
-| [**POG**](https://drive.google.com/drive/folders/1tHCG8x1fLF18ccuXMJsEB8mNIn5n4F2l?usp=sharing) | N/A        | pogrb        | Fashion    | ✅ Bridge    | [View Processor](https://github.com/Jyonn/Legommenders/blob/master/processor/pog_recbench_processor.py)                |
-| [**Amazon**](https://cseweb.ucsd.edu/~jmcauley/datasets/amazon_v2/)                             | books      | booksrb      | Book       | ✅ Bridge    | [View Processor](https://github.com/Jyonn/Legommenders/blob/master/processor/books_recbench_processor.py)              |
-| [**Amazon**](https://cseweb.ucsd.edu/~jmcauley/datasets/amazon_v2/)                             | automotive | automotiverb | Automotive | ✅ Bridge    | [View Processor](https://github.com/Jyonn/Legommenders/blob/master/processor/automotive_recbench_processor.py)         |
-| [**Amazon**](https://cseweb.ucsd.edu/~jmcauley/datasets/amazon_v2/)                             | cds        | cdsrb        | Music      | ✅ Bridge    | [View Processor](https://github.com/Jyonn/Legommenders/blob/master/processor/cds_recbench_processor.py)                |
-| [**Amazon**](https://cseweb.ucsd.edu/~jmcauley/datasets/amazon_v2/)                             | games      | games        | Game       | ✅ Community | Processor Coming Soon!                                                                                                 |
-
-Datasets can be processed into Legommenders format using built-in scripts based on RecBench. You can directly download the data from [here](https://drive.google.com/drive/folders/1PP2PMqg4Fxe8Qb2haob8eJy7g8bgw6tC?usp=sharing).
-
-## 🏗️ Model Architecture & Algorithms
-
-Legommenders is built with **a modular, layered architecture**:
-
-- **Multimodal Dataset Processor**: Converts raw data into three unified tables (item content, user history, interactions) using UniTok.
-- **Content Operator**: Encodes item content using static (e.g., Glove) or deep models (e.g., CNN, BERT, GPT). Supports 15+ content modules.
-- **Behavior Operator**: Encodes user behavior history using methods like attention, RNN, Transformer. 8+ options available.
-- **Click Predictor**: Predicts user-item interactions via dot product, MLP, DeepFM, DCN, etc.
-
-The following models can be realized by Legommenders:
-
-| Model                                                              | Type    | Config                               | Item Op    | User Op            | Predictor |
-|--------------------------------------------------------------------|---------|--------------------------------------|------------|--------------------|-----------|
-| [**NAML** (2019)](https://arxiv.org/abs/1907.05576)                | Recall  | `config/model/naml.yaml`             | CNN        | Additive Attention | Dot       |
-| [**NRMS** (2019)](https://aclanthology.org/D19-1671/)              | Recall  | `config/model/nrms.yaml`             | Attention  | Attention          | Dot       |
-| [**LSTUR** (2019)](https://aclanthology.org/P19-1033/)             | Recall  | `config/model/lstur.yaml`            | CNN        | GRU                | Dot       |
-| [**PLM-NR** (2021)](https://arxiv.org/abs/2104.07413)              | Recall  | `config/model/bert-naml.yaml`        | BERT       | Additive Attention | Dot       |
-| [**Fastformer** (2023)](https://arxiv.org/abs/2108.09084)          | Recall  | `config/model/fastformer.yaml`       | Fastformer | Fastformer         | Dot       |
-| [**MINER** (2022)](https://aclanthology.org/2022.findings-acl.29/) | Recall  | `config/model/bert-miner.yaml`       | BERT       | PolyAttention      | Dot       | 
-| [**ONCE** (2024)](https://arxiv.org/abs/2305.06566)                | Recall  | `config/model/llama-naml.yaml`       | Llama1     | Additive Attention | Dot       |
-| [**IISAN** (2024)](https://arxiv.org/abs/2404.02059)               | Recall  | `config/model/llama-iisan-naml.yaml` | Llama1     | Additive Attention | Dot       |
-| [**PNN** (2016)](https://arxiv.org/pdf/1611.00144)                 | Ranking | `config/model/pnn_id.yaml`           | N/A        | Pooling            | PNN       |
-| [**DeepFM** (2017)](https://arxiv.org/abs/1703.04247)              | Ranking | `config/model/deepfm_id.yaml`        | N/A        | Pooling            | DeepFM    |
-| [**DCN** (2017)](https://arxiv.org/pdf/1708.05123)                 | Ranking | `config/model/dcn_id.yaml`           | N/A        | Pooling            | DCN       |
-| [**DIN** (2017)](https://arxiv.org/abs/1706.06978)                 | Ranking | `config/model/din_id.yaml`           | N/A        | N/A                | DIN       |
-| [**AutoInt** (2018)](https://arxiv.org/abs/1810.11921)             | Ranking | `config/model/autoint_id.yaml`       | N/A        | Pooling            | AutoInt   |
-| [**DCNv2** (2020)](https://arxiv.org/abs/2008.13535)               | Ranking | `config/model/dcnv2_id.yaml`         | N/A        | Pooling            | DCNv2     |
-| [**MaskNet** (2021)](https://arxiv.org/abs/2102.07619)             | Ranking | `config/model/masknet_id.yaml`       | N/A        | Pooling            | MaskNet   |
-| [**GDCN** (2023)](https://arxiv.org/abs/2311.04635)                | Ranking | `config/model/gdcn_id.yaml`          | N/A        | Pooling            | GDCN      | 
-| [**FinalMLP** (2023)](https://arxiv.org/abs/2304.00902)            | Ranking | `config/model/finalmlp_id.yaml`      | N/A        | Pooling            | FinalMLP  |
-
-
-## 🚀 Training & Evaluation
-
-1. **Data Preprocessing:**
-
-```shell
-python process.py --data mind
-```
-
-2. **Embedding Setup (e.g. BERT):**
-
-```shell
-python embed.py --model bertbase
-```
-
-3. **Train a Model:**
-
-```shell
-python trainer.py \ 
-  --data config/data/mind.yaml \
-  --model config/model/naml.yaml \
-  --hidden_size 256 \ 
-  --lr 0.001 \ 
-  --batch_size 64 \
-  --item_page_size 0 \
-  --embed config/embed/glove.yaml
-```
-
-The default evaluation metric on the validation set is GAUC. You can specify other metrics like MRR, NDCG, by adding `--metrics mrr` or `--metrics ndcg@10` to the command. We will list all our supported metrics below.
-
-4. **Evaluate:** 
-
-After trained, Trainer will automatically evaluate the model on test dataset. You can also use the `tester.py` script to load saved models and evaluate them.
-
-By default, the evaluation metrics on the test dataset includes:
-  - GAUC
-  - MRR
-  - NDCG@1
-  - NDCG@5
-  - NDCG@10
-
-We also support the following evaluation metrics:
-  - LogLoss
-  - AUC
-  - LRAP
-  - F1@threshold
-  - HitRatio@k
-  - Recall@k
-
-You can add the evaluation metrics at `utils/metrics.py`.
-
-⚠️ **NOTE**: following existing recommendation repositories, the implementation of `MRR` is not the same as the original one. To get the original MRR, use `MRR0` instead (HIGHLY RECOMMEND).
-
-## 🧪 Example Command
-
-### Train NAML model on MIND:
-
-```shell
-python trainer.py \ 
-  --data config/recbench/mind.yaml \
-  --model config/model/bert-naml.yaml \
-  --hidden_size 256 \
-  --lr 0.001 \
-  --batch_size 64 \
-  --lm glove \
-  --embed config/embed/glove.yaml
-```
-
-### To use BERT instead of GloVe
-
-```shell
-python trainer.py \ 
-  --data config/recbench/mind.yaml \
-  --model config/model/bert-naml.yaml \
-  --hidden_size 256 \
-  --lr 0.0001 \
-  --batch_size 64 \
-  --lm glove \
-  --embed config/embed/bert.yaml \  # generate the yaml first, by running python embed.py --model bertbase
-  --item_page_size \  # set it as large as possible based on your GPU memory  
-  --use_lora true \
-  --lora_r 8 \
-  --lora_alpha 128 \
-  --tune_from -2  # freeze the first N-1 layers, and tune the last layer, it is the same as --tune_from 10
-```
-
-#### [ONCE-DIRE-LLAMA1-NAML](https://arxiv.org/abs/2305.06566)
+Replace `YOUR_ACCOUNT` with the account that hosts your copy of this repository:
 
 ```bash
-python trainer.py 
-  --data config/data/mind-lm-prompt.yaml \  # for more powerful language models, we suggest to use the data concatenated with natural prompts
-  --model config/model/llama-naml.yaml \ 
-  --hidden_size 256 \ 
-  --lr 0.0001 \
-  --batch_size 64 \
-  --item_page_size 64 \
-  --embed config/embed/llama.yaml \ # generate the yaml first, by running python embed.py --model llama1
-  --use_lora 1 \
-  --lora_r 32 \
-  --lora_alpha 128 \ 
-  --lm llama1 \
-  --llama 1 \
-  --tune_from -2  # freeze the first N-1 layers, and tune the last layer, it is the same as --tune_from 30
+git clone https://github.com/YOUR_ACCOUNT/Legoizer.git
+cd Legoizer
+
+# Creates .venv, installs Python dependencies, and builds the frontend.
+bash studio/setup.sh --torch cpu
+
+# Optional environment report; performs no data/model downloads.
+bash studio/doctor.sh
+
+# Serves the frontend and API together, in the foreground.
+bash studio/run.sh
 ```
 
-## Updates
+Open **http://127.0.0.1:8000/**. API documentation is at
+**http://127.0.0.1:8000/docs**. If `python3.11` is not on PATH, pass an interpreter:
 
-- **2025-07-14**: Code comments are available!
-- **2025-04-10**: New LLM Adaptor: IISAN is supported. 
-- **2025-02-18**: Legommenders v2.0, with multiple LLMs support, simplified configuration, more CTR predictors, and recbench-based datasets is released!
-- **2025-01-06**: Legommenders v2.0 beta is released!
-- **2024-12-05**: LSTUR model is now re-added to the Legommenders package, which was not compatible from Jan. 2024.
-- **2024-01-23**: Legommenders partially supports the flatten sequential recommendation model. New models are added, including: MaskNet, GDCN, etc.
-- **2023-10-16**: We clean the code and convert names of the item-side parameters.
-- **2023-10-05**: The first recommender system package with a modular-design, Legommenders, is released!
-- **2022-10-22**: Legommenders project is initiated.
-
-## Citations
-
-If you find Legommenders useful in your research, please consider citing our project:
-
-```
-@misc{legommenders,
-  title={Legommenders: A Comprehensive Content-Based Recommendation Library with LLM Support},
-  author={Liu, Qijiong and Fan, Lu and Wu, Xiao-Ming},
-  booktitle = {Proceedings of the ACM Web Conference 2025},
-  month = {may},
-  year = {2025},
-  address = {Australia, Sydney},
-}
+```bash
+bash studio/setup.sh --python /path/to/python3.11 --torch cpu
 ```
 
-Thank you for your interest in Legommenders! Feel free to raise issues or contribute 🙏. Happy Recommending!
+No global Python environment is modified. The installer uses `.venv/` and stores
+its temporary files and package caches under `studio/backend/workspace/install/`.
+It installs application dependencies only; datasets and model checkpoints are
+acquired later. You do not need to run `process.py` before using Studio.
 
-## Acknowledgement
+If port 8000 is occupied, run `BACKEND_PORT=8123 bash studio/run.sh` and open
+`http://127.0.0.1:8123/`.
 
-We would like to thank Jieming Zhu and [FuxiCTR](https://github.com/reczoo/FuxiCTR) project for providing multiple useful CTR predictors.
+## Run on your own NVIDIA GPU server
 
-We would like to thank [transformers](https://huggingface.co/transformers/) for providing the pre-trained language models.
+Clone the repository on the **GPU server**, then run there:
 
-We would like to thank [UniTok V4](https://unitok.qijiong.work/) for providing the unified data tokenization service.
+```bash
+cd /path/to/Legoizer
+nvidia-smi
+bash studio/setup.sh --torch cu128
+bash studio/doctor.sh --require-cuda
+BACKEND_PORT=8000 bash studio/run.sh
+```
 
-We would like to thank [RecBench](https://github.com/RecBench) for providing unified recommendation dataset preprocessing framework.
+If your driver requires a different wheel, select a compatible PyTorch 2.9.1
+index with `TORCH_INDEX_URL`. Do not install a CPU wheel and expect CUDA to be
+available. The application uses one backend worker because process/run state
+is managed in memory and persisted to local files.
 
-We would like to thank [Oba](https://pypi.org/project/oba/), [RefConfig](https://pypi.org/project/refconfig/), and [SmartDict](https://pypi.org/project/smartdict/) for providing useful tools for our project.
+On **your computer**, open a separate terminal and create an SSH tunnel:
+
+```bash
+ssh -N -L 127.0.0.1:8000:127.0.0.1:8000 YOUR_USER@YOUR_GPU_SERVER
+```
+
+Keep both terminals open and visit **http://127.0.0.1:8000/** on your computer.
+If local port 8000 is busy, use `127.0.0.1:18000:127.0.0.1:8000` and browse
+`http://127.0.0.1:18000/`. The browser runs locally; resource preparation,
+training, checkpoints, and evaluation all run on the GPU server.
+
+In Studio's **Training** settings, select **CUDA** and the intended GPU index.
+The default training device is CPU; installing a CUDA wheel alone does not
+change a saved graph's device. Reduce batch size or choose a smaller encoder
+if GPU memory is insufficient. When using `CUDA_VISIBLE_DEVICES`, GPU indices
+in Studio refer to the visible devices in that process.
+
+## First model and training run
+
+1. Open **NAML Demo** from the welcome screen.
+2. Inspect the graph. Select components to change their properties, or replace
+   the user encoder with another compatible component.
+3. Use **Validate** and **Generate Model** to inspect/export the YAML.
+4. Select **CPU** for a small local run, or **CUDA** on your GPU server. Click
+   **Train**. The log shows data downloads, tokenization, embedding preparation,
+   and then the real trainer's output.
+5. Inspect evaluation metrics and compare completed runs. Saved graphs, run
+   history, and checkpoints remain in this checkout.
+
+The demo samples up to 650 real MIND-small users with a fixed seed. It still
+needs the MIND-small source data and the selected embedding resources. The
+initial GloVe archive is approximately **862 MB**, with additional space needed
+for extraction and converted embeddings. The first run can take substantially
+longer than subsequent runs. Demo results are not substitutes for full-dataset
+experimental comparisons.
+
+Use **Cancel run** to stop preparation/training. Cancel active runs before
+stopping the backend. Press **Ctrl+C** in the launch terminal, or use another
+terminal in the same checkout:
+
+```bash
+bash studio/stop.sh
+```
+
+The stop command targets the service manager for this checkout; it does not
+use machine-wide process-name matching. Logs are in `studio/logs/`.
+
+## Automatic data and optional local configuration
+
+Studio reuses compatible processed tables first. Otherwise it uses valid local
+raw data configured in `.data`, or downloads the supported source and preprocesses
+it. Missing `.data` is normal and does not produce a configuration warning.
+Incomplete MIND/xMIND/RecBench local paths produce a log message and fall back
+to acquisition. Upstream failures remain visible errors, not fabricated data.
+
+You only need the optional override if you already have local data, work offline,
+or need a particular published split:
+
+```bash
+cp .data.example .data
+# Edit .data and uncomment only entries for files you actually have.
+```
+
+Restart the backend after changing `.data` or `.model`. The standalone upstream
+`process.py` CLI still expects its raw-data path configuration; Studio's automatic
+preparation is implemented by the Studio backend, not by that CLI.
+
+See [Data sources and offline use](docs/DATA.md) for directory layouts, download
+locations, dataset coverage, and split limitations. The tracked `.model` file
+contains public Hugging Face model aliases; edit it locally if you need a different
+repository or an existing model directory.
+
+Gated/private models require provider approval and your own Hugging Face read
+Token. Submit it through localhost, the SSH tunnel above, or configured HTTPS.
+Do not put it in YAML, `.model`, README files, or Git. Training credentials are
+passed to the child process and excluded from saved graphs and run records.
+Downloading a model does not grant access to other restricted resources.
+
+The **Official Benchmark** view retrieves results from an external API. An
+unavailable API does not prevent local graph editing and training; benchmark
+results are separate from your local runs.
+
+## Configuration and development
+
+The default service is local and single-user. There is no application login,
+tenant isolation, or public job quota. Keep loopback access and use SSH for remote
+servers. Only bind to another interface when you have arranged appropriate
+network access controls; see [Development and deployment](docs/DEVELOPMENT.md).
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `STUDIO_PYTHON` | `.venv/bin/python`, then active environment | Explicit runtime interpreter |
+| `STUDIO_NODE_BIN` | Node on PATH | Directory containing `node` and `npm` |
+| `BACKEND_PORT` | `8000` | API and built frontend port |
+| `STUDIO_HOST` | `127.0.0.1` | Bind address for backend and development frontend |
+| `STUDIO_DEV` | `0` | Set `1` to launch Vite alongside the backend |
+| `FRONTEND_PORT` | `5173` | Vite development port |
+| `STUDIO_API_URL` | `http://127.0.0.1:<BACKEND_PORT>` | Vite's backend proxy target |
+| `NPM_REGISTRY` | `https://registry.npmjs.org` | Registry used by installation scripts |
+| `TORCH_INDEX_URL` | Selected CPU/CUDA wheel index | Override during setup only |
+
+The scripts read environment variables; they do not automatically load a `.env`
+file. Export settings in your shell or pass them before a command.
+
+For tests and live frontend editing:
+
+```bash
+bash studio/setup.sh --torch cpu --dev
+.venv/bin/python -m pytest studio/backend/tests -q
+(cd studio/frontend && npm test && npm run build)
+STUDIO_DEV=1 bash studio/run.sh
+```
+
+Development UI: `http://127.0.0.1:5173/`. Vite proxies `/api` to the backend.
+Rebuild the frontend after changes when using the default single-port mode.
+See the [Studio guide](studio/README.md) for editor architecture, API, component
+extension, and optional browser tests. CI runs CPU backend tests and frontend
+checks; it does not download datasets or run GPU training. See the
+[validation notes](docs/VALIDATION.md) for the checks actually completed for
+this prepared release and the remaining platform coverage.
+
+## Troubleshooting
+
+- **Missing Python modules or import errors:** use `.venv/bin/python`, rerun setup,
+  then `bash studio/doctor.sh`. Do not combine an old global Transformers/PyTorch
+  stack with this release's pinned runtime.
+- **CUDA unavailable:** inspect `nvidia-smi`, the selected interpreter, and its
+  PyTorch wheel. Run `bash studio/doctor.sh --require-cuda` on the GPU server.
+- **Downloads fail:** inspect the training log, provider access, proxy settings,
+  and available disk space. Use `.data` to supply existing data if necessary.
+  Large installation temporary files live under the project rather than `/tmp`.
+- **Page says frontend is not built:** run `npm ci && npm run build` in
+  `studio/frontend`, then restart the backend.
+- **Port is in use:** select a different `BACKEND_PORT` and update the SSH tunnel.
+- **Token rejected over plain remote HTTP:** use localhost through SSH, or HTTPS.
+- **You changed a local data/model path:** restart the backend to refresh cached
+  alias configuration. Dataset-indexed embedding matrices must match their
+  dataset and cannot always be downloaded automatically.
+
+## Repository, attribution, and license
+
+```text
+studio/frontend/        React + TypeScript visual editor
+studio/backend/         FastAPI, registry, validator, compiler, executor, tests
+studio/scripts/         Runtime discovery, checks, service management
+config/                 Model, data, embedding, and experiment YAML
+model/, loader/         Legommenders model/runtime components
+trainer.py, tester.py   Real training and evaluation entry points
+docs/                   Data, development, and release guides
+```
+
+This project is derived from [Jyonn/Legommenders](https://github.com/Jyonn/Legommenders).
+It retains the original [MIT license and copyright notice](LICENSE). The archived
+[upstream README](README.legommenders.md) documents its models, CLI, publications,
+and citations. Legoizer adds visual programming, resource acquisition, run
+management, bilingual UI, and compatibility/training fixes; it is not the upstream
+project's official hosted service.
+
+Dataset and model assets are obtained from their respective publishers and are
+not bundled in this source repository. See their access and usage terms before
+using or redistributing those assets. See [Release preparation](docs/RELEASING.md)
+before publishing your own copy.

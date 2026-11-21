@@ -38,7 +38,7 @@ from typing import List
 import torch
 from pigmento import pnt
 from torch import nn
-from unitok import Vocab
+from unitok import Vocab, VocabularyHub
 
 from embedder.base_embedder import BaseEmbedder
 
@@ -51,7 +51,8 @@ class GloVeEmbedder(BaseEmbedder):
     # ------------------------------------------------------------------ #
     # Constants describing where and what to download                     #
     # ------------------------------------------------------------------ #
-    DL_URI = "https://downloads.cs.stanford.edu/nlp/data/glove.6B.zip"
+    DL_URI = "https://huggingface.co/stanfordnlp/glove/resolve/main/glove.6B.zip"
+    FALLBACK_DL_URI = "https://downloads.cs.stanford.edu/nlp/data/glove.6B.zip"
 
     FILE_DIR = os.path.join("data", "embeddings")          # destination root
     ZIP_NAME = "glove.6B.zip"
@@ -100,13 +101,16 @@ class GloVeEmbedder(BaseEmbedder):
         # -------------------------------------------------------------- #
         # 3. Parse vectors & build vocab                                 #
         # -------------------------------------------------------------- #
-        vocab = Vocab(name="glove")
+        vocab = VocabularyHub.get("glove", default=None)
+        if vocab is None:
+            vocab = Vocab(name="glove")
         embeddings: List[List[float]] = []
 
         with open(self.FILE_PATH, encoding="utf-8") as fh:
             for line in fh:
                 word, *values = line.rstrip().split()
-                vocab.append(word)                               # keep order!
+                if vocab.append(word) != len(embeddings):
+                    raise ValueError("Existing GloVe vocabulary order does not match the vector file")
                 embeddings.append([float(x) for x in values])
 
         # Convert to tensor  (len(vocab) × 300)
@@ -138,8 +142,7 @@ class GloVeEmbedder(BaseEmbedder):
             If the vocabulary has not been built yet.  In that case the
             user should run the normal embedding extraction first.
         """
-        vocab = Vocab(name="glove")
-        vocab_path = vocab.filepath(cls.FILE_DIR)
+        vocab_path = os.path.join(cls.FILE_DIR, "glove.vocab")
 
         if not os.path.exists(vocab_path):
             raise FileNotFoundError(
@@ -148,4 +151,7 @@ class GloVeEmbedder(BaseEmbedder):
                 "`python embed.py --model glove`) to create it."
             )
 
+        vocab = VocabularyHub.get("glove", default=None)
+        if vocab is None:
+            vocab = Vocab(name="glove")
         return vocab.load(cls.FILE_DIR)

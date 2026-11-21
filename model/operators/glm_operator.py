@@ -5,12 +5,16 @@ from transformers.modeling_outputs import BaseModelOutputWithPast
 
 from loader.env import Env
 from model.common.glm_interface import ChatGLMModel
+from model.common.lm import load_legacy_chatglm
 from model.operators.once_operator import OnceOperator
 
 
 class GLMOperator(OnceOperator, abc.ABC):
     dtype = torch.bfloat16
     transformer: ChatGLMModel
+
+    def load_transformer(self):
+        return load_legacy_chatglm(self.transformer_key)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

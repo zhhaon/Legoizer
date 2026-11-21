@@ -1,1 +1,30 @@
-__pycache__
+# Local configuration and credentials (examples remain publishable).
+/.data
+/.auth
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# Environments, dependencies, build output, and generated resources.
+/.venv/
+/venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.vitest/
+.coverage
+htmlcov/
+*.tsbuildinfo
+node_modules/
+/studio/frontend/dist/
+/studio/frontend/.playwright-cli/
+/studio/backend/workspace/
+/studio/logs/
+/cache/
+/checkpoints/
+/data/
+/.legommenders-tools/
+.DS_Store
+._*

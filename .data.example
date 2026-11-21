@@ -1,0 +1,10 @@
+# Optional: leave .data absent to let Studio download supported datasets.
+# Uncomment only entries whose files already exist on your machine.
+# MIND expects train/news.tsv, train/behaviors.tsv, dev/news.tsv, dev/behaviors.tsv.
+# mind = /path/to/MIND
+# RecBench published splits expect items/users/train/valid/test.parquet.
+# booksrb = /path/to/books
+# xMIND expects xMINDsmall_train/news.tsv and xMINDsmall_dev/news.tsv.
+# xmindcmn = /path/to/xmind/cmn
+# Exact ONCE-MIND split: raw MIND directory followed by an impressions JSON file.
+# oncemind = /path/to/MIND$/path/to/impressions.json

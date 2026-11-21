@@ -27,11 +27,21 @@ class OPTOperator(OnceOperator, abc.ABC):
     ):
         opt = self.transformer
 
-        input_shape = hidden_states.size()[:-1]
+        if hasattr(opt.decoder, "_update_causal_mask"):  # Transformers 4.x
+            causal_attention_mask, attention_mask = opt.decoder._update_causal_mask(
+                hidden_states, hidden_states.shape[:-1], 0, attention_mask, None, None
+            )
+        else:
+            from transformers.masking_utils import create_causal_mask
 
-        causal_attention_mask, attention_mask = opt.decoder._update_causal_mask(
-            hidden_states, input_shape, 0, attention_mask, None, None
-        )
+            causal_attention_mask = create_causal_mask(
+                config=opt.config,
+                inputs_embeds=hidden_states,
+                attention_mask=attention_mask,
+                past_key_values=None,
+            )
+        if attention_mask is None:
+            attention_mask = torch.ones_like(hidden_states[..., 0])
 
         position_ids = torch.cumsum(attention_mask, dim=1)
         position_ids = (position_ids * attention_mask - 1).long()
@@ -42,12 +52,10 @@ class OPTOperator(OnceOperator, abc.ABC):
                 attention_mask=causal_attention_mask,
                 position_ids=position_ids,
                 layer_head_mask=None,
-                past_key_value=None,
-                output_attentions=None,
-                use_cache=None,
+                use_cache=False,
             )
 
-            hidden_states = layer_outputs[0]
+            hidden_states = layer_outputs[0] if isinstance(layer_outputs, tuple) else layer_outputs
 
         if opt.decoder.final_layer_norm is not None:
             hidden_states = opt.decoder.final_layer_norm(hidden_states)

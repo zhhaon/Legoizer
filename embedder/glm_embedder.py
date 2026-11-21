@@ -45,6 +45,8 @@ import abc
 from torch import nn
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
+from model.common.lm import load_legacy_chatglm
+
 from embedder.base_embedder import BaseEmbedder
 from model.common.glm_interface import ChatGLMModel
 from utils.config_init import ModelInit
@@ -72,10 +74,7 @@ class GLMEmbedder(BaseEmbedder, abc.ABC):
         model_name: str = ModelInit.get(str(self))
 
         # 1) Load the full causal-LM wrapper ----------------------------
-        glm_lm = AutoModelForCausalLM.from_pretrained(
-            model_name,
-            trust_remote_code=True  # mandatory for 3rd-party modelling code
-        )
+        glm_lm = load_legacy_chatglm(model_name, AutoModelForCausalLM)
 
         # 2) Keep only the underlying transformer (saves memory) --------
         #    transformers' ChatGLM architecture stores the main network

@@ -33,8 +33,18 @@ class BertOperator(OnceOperator, abc.ABC):
         attention_mask: torch.Tensor,
         output_hidden_states: bool = True,
     ):
-        input_shape = hidden_states.size()[:-1]
-        extended_attention_mask = self.transformer.get_extended_attention_mask(attention_mask, input_shape)
+        try:
+            from transformers.masking_utils import create_bidirectional_mask
+        except ImportError:  # Transformers 4.x
+            extended_attention_mask = self.transformer.get_extended_attention_mask(
+                attention_mask, hidden_states.shape[:-1]
+            )
+        else:
+            extended_attention_mask = create_bidirectional_mask(
+                config=self.transformer.config,
+                inputs_embeds=hidden_states,
+                attention_mask=attention_mask,
+            )
 
         output = self.transformer.encoder(
             hidden_states=hidden_states,

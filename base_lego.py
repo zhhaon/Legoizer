@@ -208,18 +208,29 @@ class BaseLego:
                 if p.requires_grad:
                     pnt(name, p.data.shape)
 
+    def train_batches_per_epoch(self) -> int:
+        batch_size = self.exp.policy.batch_size
+        count = len(self.manager.train_set)
+        batches = (count + batch_size - 1) // batch_size
+        limit = self.exp.policy.epoch_batch
+        if not limit:
+            return batches
+        if limit < 0:
+            limit = max(count // batch_size // -limit, 1)
+        # Preserve the CLI limit's existing zero-based stopping rule.
+        return min(batches, limit + 2)
+
     def init_scheduler(self) -> None:
         """
         Linear warm-up learning rate schedule.
         """
+        batches = self.train_batches_per_epoch()
+        accumulate = self.exp.policy.accumulate_batch or 1
+        updates = (batches + accumulate - 1) // accumulate
         self.scheduler = get_linear_schedule_with_warmup(
             self.optimizer,
             num_warmup_steps=self.exp.policy.n_warmup,
-            num_training_steps=(
-                len(self.manager.train_set)
-                // self.exp.policy.batch_size
-                * self.exp.policy.epoch
-            ),
+            num_training_steps=updates * self.exp.policy.epoch,
         )
 
     # ------------------------------------------------------------------ #

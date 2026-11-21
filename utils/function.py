@@ -215,7 +215,7 @@ def package_require(name: str, version: Optional[str] = None) -> None:
     Parameters
     ----------
     name : str
-        The package name as known by `pip` / `pkg_resources`.
+        The package name as known by pip.
     version : str | None
         A minimum required version string (e.g. "1.2.3"). If `None`, any
         version is accepted.
@@ -225,18 +225,17 @@ def package_require(name: str, version: Optional[str] = None) -> None:
     ImportError
         If the package is missing, or if its version is older than required.
     """
-    import pkg_resources
+    from importlib.metadata import PackageNotFoundError, version as installed_package_version
+
+    from packaging.version import Version
 
     try:
-        installed_version = pkg_resources.get_distribution(name).version
-    except pkg_resources.DistributionNotFound:
+        installed_version = installed_package_version(name)
+    except PackageNotFoundError:
         raise ImportError(f"Package {name} not found. Please use 'pip install {name}' to install.")
 
     if version is not None:
-        # NOTE: `pkg_resources.parse_version` could be used for more robust
-        # version comparison, but string comparison is often sufficient for
-        # x.y.z style semantic versions.
-        if installed_version < version:
+        if Version(installed_version) < Version(version):
             raise ImportError(
                 f"Package {name} version is {installed_version}, but at least {version} is required. "
                 f"Please use 'pip install {name} -U' to upgrade."

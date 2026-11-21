@@ -53,6 +53,8 @@ python trainer.py \
 
 from __future__ import annotations
 
+from itertools import islice
+
 import psutil
 import torch
 from typing import Dict, Any, Optional
@@ -166,8 +168,7 @@ class Trainer(Tester):
 
         dev_func = self.simple_evaluate if Env.simple_dev else self.dev
 
-        train_steps = len(self.manager.train_set) // self.exp.policy.batch_size
-        accumulate_step = 0
+        train_steps = self.train_batches_per_epoch()
         accumulate_batch = self.exp.policy.accumulate_batch or 1
 
         # Interval at which we log `loss=` lines to the .log file
@@ -187,34 +188,26 @@ class Trainer(Tester):
             self.legommender.train()
             self.manager.setup(Symbols.train)
 
-            for step, batch in enumerate(bar := bars.TrainBar(epoch=epoch)(loader,
+            for step, batch in enumerate(bar := bars.TrainBar(epoch=epoch)(islice(loader, train_steps),
+                                                                           total=train_steps,
                                                                            disable=self.disable_tqdm)):
                 # Forward + backward
                 loss = self.legommender(batch=batch)
-                loss.backward()
+                window_start = step // accumulate_batch * accumulate_batch
+                window_size = min(accumulate_batch, train_steps - window_start)
+                (loss / window_size).backward()
 
                 bar.set_postfix_str(f'loss: {meaner(loss.item()):.4f}')
 
                 # ----------- gradient accumulation --------------------------- #
-                accumulate_step += 1
-                if accumulate_step == accumulate_batch:
+                if step + 1 == window_start + window_size:
                     self.optimizer.step()
                     self.scheduler.step()
                     self.optimizer.zero_grad()
-                    accumulate_step = 0
 
                 # ----------- optional interval logging ---------------------- #
                 if check_interval and (step + 1) % check_interval == 0:
                     self.log_interval(epoch, step, meaner.mean)
-
-                # ----------- limit epoch length if requested ---------------- #
-                if self.exp.policy.epoch_batch:
-                    if self.exp.policy.epoch_batch < 0:  # relative
-                        if step > max(train_steps // (-self.exp.policy.epoch_batch), 1):
-                            break
-                    else:  # absolute
-                        if step > self.exp.policy.epoch_batch:
-                            break
 
             # ---------------------------------------------------------------- #
             # End of epoch → dev evaluation + early stopping decision          #

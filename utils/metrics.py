@@ -273,6 +273,27 @@ class MetricPool:
     # Building a MetricPool from a list of user supplied strings
     # -------------------------------------------------------------------------
     @classmethod
+    def make_metric(cls, value: str) -> Metric:
+        """Construct a metric from the same syntax used in experiment YAML."""
+        name, separator, argument = value.partition("@")
+        key = name.upper()
+        if key not in cls.metric_dict:
+            raise ValueError(f"Metric {name} not found")
+        metric_class = cls.metric_dict[key]
+        if key in {"RECALL", "NDCG", "HITRATIO"}:
+            if not argument.isascii() or not argument.isdecimal() or int(argument) < 1:
+                raise ValueError(f"{name} requires a positive integer cutoff (e.g. {name}@10)")
+            return metric_class(int(argument))
+        if key == "F1" and separator:
+            threshold = float(argument)
+            if not 0 <= threshold <= 1:
+                raise ValueError("F1 requires a threshold between 0 and 1")
+            return metric_class(threshold)
+        if separator:
+            raise ValueError(f"{name} does not accept an argument")
+        return metric_class()
+
+    @classmethod
     def parse(cls, metrics_config: Sequence[str]) -> "MetricPool":
         """
         Convert a list like ["AUC", "NDCG@10", "F1@0.7"] into Metric objects.
@@ -282,18 +303,7 @@ class MetricPool:
         metrics: List[Metric] = []
 
         for m in metrics_config:
-            at = m.find("@")
-            argument: List[Any] = []
-            if at > -1:
-                # Split "NDCG@10" -> "NDCG", ["10"]
-                m, argument = m[:at], [int(m[at + 1 :])]
-
-            # Validate the metric name
-            if m.upper() not in MetricPool.metric_dict:
-                raise ValueError(f"Metric {m} not found")
-
-            metric_cls = MetricPool.metric_dict[m.upper()]
-            metric = metric_cls(*argument)
+            metric = cls.make_metric(m)
 
             # Warn about the non-standard MRR implementation
             if isinstance(metric, MRR):

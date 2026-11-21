@@ -1,0 +1,2 @@
+# Optional backend test tooling.
+pytest==9.2.0

@@ -1,0 +1,23 @@
+name: xmind-${lang}
+base_dir: data/mind
+item:
+  ut: data/xmind${lang}/items
+  inputs:
+  - title@${lm}: 30
+user:
+  ut: ${data.base_dir}/users
+  truncate: 50
+inter:
+  train: ${data.base_dir}/train
+  dev: ${data.base_dir}/valid
+  test: ${data.base_dir}/test
+  filters:
+    history:
+    - 'lambda x: x'
+column_map:
+  item_col: item_id
+  user_col: user_id
+  history_col: history
+  neg_col: neg
+  label_col: click
+  group_col: user_id

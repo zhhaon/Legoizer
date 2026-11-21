@@ -68,6 +68,7 @@ class ConfigInit(abc.ABC):
     Subclasses must implement the `examples` method to provide example configurations.
     """
     _d: dict = None  # A class-level dictionary to store parsed configurations
+    optional = False
 
     @classmethod
     def parse(cls):
@@ -87,9 +88,10 @@ class ConfigInit(abc.ABC):
 
         # Check if the configuration file exists
         if not os.path.exists(f'.{cls.classname()}'):
-            warnings.warn(f'config file .{cls.classname()} not found')
-            print(f'example .{cls.classname()} config:')
-            print(cls.examples())  # Print example configurations
+            if not cls.optional:
+                warnings.warn(f'config file .{cls.classname()} not found')
+                print(f'example .{cls.classname()} config:')
+                print(cls.examples())
             return cls._d
 
         # Read and parse the configuration file
@@ -97,8 +99,13 @@ class ConfigInit(abc.ABC):
         #     config = f.read()
         config = io.file_load(f'.{cls.classname()}')  # Load the configuration file content
 
-        for line in config.strip().split('\n'):  # Process each line in the configuration file
-            key, value = line.split('=')
+        for number, line in enumerate(config.splitlines(), 1):
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+            key, separator, value = line.partition('=')
+            if not separator or not key.strip() or not value.strip():
+                raise ValueError(f'Invalid .{cls.classname()} entry on line {number}: expected name = value')
             cls._d[key.strip().lower()] = cast(str, value).strip()  # Store key-value pairs in lowercase
 
         return cls._d
@@ -157,6 +164,7 @@ class DataInit(ConfigInit):
     """
     A subclass of ConfigInit for managing data-related configurations.
     """
+    optional = True
 
     @classmethod
     def examples(cls):

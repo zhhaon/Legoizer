@@ -37,10 +37,8 @@ Installing those system tools is separate from this project's setup script.
 
 ## Run on your own computer (CPU)
 
-Replace `YOUR_ACCOUNT` with the account that hosts your copy of this repository:
-
 ```bash
-git clone https://github.com/YOUR_ACCOUNT/Legoizer.git
+git clone https://github.com/zhhaon/Legoizer.git
 cd Legoizer
 
 # Creates .venv, installs Python dependencies, and builds the frontend.

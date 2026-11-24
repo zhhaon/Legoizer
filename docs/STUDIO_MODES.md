@@ -46,10 +46,10 @@ explain that execution happens on the user's server. Benchmark uses a bundled st
 
 ## Portable packages / 可迁移配置包
 
-Open **YAML Preview** or click the mode badge. Set a relative directory, generate
+Open **YAML Preview**. Set a relative directory, generate
 the package, then copy any file/commands or download individual files/a ZIP.
 The same interface is available in server mode, where configs are resolved by Python.
-打开 YAML Preview 或点击模式提示，设置相对目录后生成配置包，可复制或下载单个文件，也可下载 ZIP。
+打开 YAML Preview，设置相对目录后生成配置包，可复制或下载单个文件，也可下载 ZIP。
 服务器模式使用相同入口，由 Python 解析配置。
 
 Extract the ZIP into the root of a matching Legoizer checkout. The ZIP includes

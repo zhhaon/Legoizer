@@ -28,7 +28,7 @@ jobs:
           STUDIO_BASE_PATH: ${{ steps.pages.outputs.base_path }}/
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: studio/frontend/dist
+          path: studio/frontend/dist-pages
   deploy:
     needs: build
     runs-on: ubuntu-latest

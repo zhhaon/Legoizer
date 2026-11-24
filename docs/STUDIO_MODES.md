@@ -26,11 +26,11 @@ npm ci
 STUDIO_BASE_PATH=/Legoizer/ npm run build:pages
 ```
 
-Publish `studio/frontend/dist` to GitHub Pages. For a root/custom domain use `/`
+Publish `studio/frontend/dist-pages` to GitHub Pages. For a root/custom domain use `/`
 as the base path. The manual **Studio GitHub Pages** workflow builds and deploys
 the committed catalog; it does not start on push. Configure Pages to use GitHub
 Actions, then dispatch the workflow when ready. No publication is needed for local use.
-发布 `dist`；根域名部署使用 `/`。仓库提供手动触发的 GitHub Actions 工作流，使用已提交
+发布 `dist-pages`；根域名部署使用 `/`。仓库提供手动触发的 GitHub Actions 工作流，使用已提交
 的静态目录，不会因 push 自动发布。需将 Pages 来源设为 GitHub Actions。
 
 Regenerate and commit `public/catalog.json` after changing Python components,
@@ -75,3 +75,18 @@ additional columns present only in server UniTok tables require server mode or a
 refreshed catalog. Static checks cannot verify files, GPU memory or Python construction.
 本地 YAML 导入只接受已展开的模型配置。跨模式迁移推荐 Graph JSON，可保留完整训练和数据设置。
 静态目录无法发现服务器 UniTok 表中的额外字段，也不能验证本机文件、GPU 显存或 Python 构造。
+
+## Separate build outputs / 分离构建产物
+
+`npm run build` explicitly selects server mode, uses root asset URLs and writes
+`dist/`, which the Python backend serves. `npm run build:pages` explicitly selects
+local mode and writes `dist-pages/`. Pages builds never clean or overwrite `dist/`.
+Use `STUDIO_BASE_PATH=/Legoizer/ npm run preview:pages` to preview a Pages build
+with the same base path used when building. Mode selection overrides a leftover
+`VITE_STUDIO_MODE` environment variable for these two build scripts.
+
+`npm run build` 明确使用前后端模式、根路径资源地址，输出到后端托管的 `dist/`。
+`npm run build:pages` 明确使用纯前端模式，输出到 `dist-pages/`，不会清空或覆盖服务器产物。
+预览 Pages 时请使用与构建一致的子路径，例如
+`STUDIO_BASE_PATH=/Legoizer/ npm run preview:pages`。两个构建脚本均显式指定模式，
+不受遗留的 `VITE_STUDIO_MODE` 环境变量影响。

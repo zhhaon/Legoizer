@@ -19,6 +19,7 @@ htmlcov/
 *.tsbuildinfo
 node_modules/
 /studio/frontend/dist/
+/studio/frontend/dist-pages/
 /studio/frontend/.playwright-cli/
 /studio/backend/workspace/
 /studio/logs/

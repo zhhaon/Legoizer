@@ -2,9 +2,12 @@ import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
-  base: process.env.STUDIO_BASE_PATH || '/',
+  base: mode === 'pages' ? process.env.STUDIO_BASE_PATH || '/' : '/',
+  ...(['pages', 'server'].includes(mode) ? {
+    define: { 'import.meta.env.VITE_STUDIO_MODE': JSON.stringify(mode === 'pages' ? 'local' : 'server') },
+  } : {}),
   resolve: {
     alias: { '@': path.resolve(__dirname, 'src') },
   },
@@ -19,7 +22,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: 'dist',
+    outDir: mode === 'pages' ? 'dist-pages' : 'dist',
     sourcemap: false,
     chunkSizeWarningLimit: 1200,
   },
@@ -27,4 +30,4 @@ export default defineConfig({
     environment: 'node',
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
   },
-});
+}));

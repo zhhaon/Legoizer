@@ -1,3 +1,4 @@
+import { staticBenchmark, staticBenchmarkDetail } from './benchmark';
 import { parse, stringify } from 'yaml';
 import type { ComponentCatalog, TemplateSummary } from '@/types/catalog';
 import { DEFAULT_TRAIN, emptyGraph, type GraphJson, type GraphNode } from '@/types/graph';
@@ -179,6 +180,8 @@ function importModel(text: string, s: Snapshot): GraphJson {
   return g;
 }
 export const localApi = {
+  benchmark: staticBenchmark,
+  benchmarkDetail: staticBenchmarkDetail,
   components: async () => (await snapshot()).catalog,
   templates: async () => ({ templates: (await snapshot()).templates }),
   template: async (id: string) => { const t = (await snapshot()).templates.find(t => t.id === id); if (!t) throw new Error(rt('invalid')); return clone(t); },

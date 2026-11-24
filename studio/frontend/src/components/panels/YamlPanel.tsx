@@ -1,3 +1,4 @@
+import { copyText } from '@/utils/clipboard';
 import { RunPackage } from '../RunPackage';
 import { localMode } from '@/runtime/mode';
 import { rt } from '@/runtime/messages';
@@ -26,7 +27,7 @@ export function YamlPanel() {
   }, [result?.reference_yaml]);
 
   return (
-    <div className="flex h-full flex-col"><RunPackage /><div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_minmax(0,1fr)_240px] divide-x divide-line">
+    <div data-testid="yaml-panel-scroll" className="flex h-full min-h-0 flex-col overflow-y-auto"><RunPackage /><div className="grid min-h-[240px] flex-1 shrink-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)_240px] divide-x divide-line">
       <div className="flex min-h-0 flex-col">
         <div className="flex items-center justify-between border-b border-line px-3 py-1.5">
           <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted">
@@ -38,9 +39,10 @@ export function YamlPanel() {
             </button>
             <button className="tool-btn !h-6 !px-1.5 !text-[9.5px]" disabled={!result} onClick={() => {
               if (!result) return;
-              void navigator.clipboard?.writeText(result.yaml_text);
-              setCopied(true);
-              window.setTimeout(() => setCopied(false), 1500);
+              void copyText(result.yaml_text).then(() => {
+                setCopied(true);
+                window.setTimeout(() => setCopied(false), 1500);
+              }).catch(error => toast('error', rt('copyFailed'), String(error)));
             }}>{copied ? <Check size={11} /> : <Clipboard size={11} />} {tr("ui.copy_af74f7")}</button>
             <button className="tool-btn !h-6 !px-1.5 !text-[9.5px]" disabled={!result} onClick={() => {
               if (result) downloadText(`${result.model_label.replace(/\s+/g, '_')}.yaml`, result.yaml_text, 'application/yaml');

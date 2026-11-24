@@ -1,3 +1,4 @@
+import { copyText } from '@/utils/clipboard';
 import { useState } from 'react';
 import { strToU8, zipSync } from 'fflate';
 import { useStudio } from '@/store/graphStore';
@@ -25,7 +26,7 @@ export function RunPackage() {
     finally { setBusy(false); }
   };
   const content = selected === 'Commands' ? current?.commands : current?.files[selected];
-  return <section className="border-b border-line p-2 text-xs">
+  return <section className="min-w-0 shrink-0 border-b border-line p-2 text-xs">
     <div className="flex flex-wrap items-center gap-2">
       <span>{localMode ? rt('local') : rt('server')}</span>
       <label>{rt('folder')} <input className="field-input !w-40" value={folder} onChange={e => setFolder(e.target.value)} /></label>
@@ -34,7 +35,7 @@ export function RunPackage() {
         <select className="field-input !w-40" value={selected} onChange={e => select(e.target.value)}>
           <option value="Commands">{rt('command')}</option>{Object.keys(current.files).map(name => <option key={name}>{name}</option>)}
         </select>
-        <button className="tool-btn outline" onClick={() => { void navigator.clipboard.writeText(content || '').then(() => useStudio.getState().toast('success', rt('copied'))).catch(e => setError(String(e))); }}>{rt('copy')}</button>
+        <button className="tool-btn outline" onClick={() => { setError(''); void copyText(content || '').then(() => useStudio.getState().toast('success', rt('copied'))).catch(e => setError(String(e))); }}>{rt('copy')}</button>
         <button className="tool-btn outline" onClick={() => downloadText(selected === 'Commands' ? 'commands.txt' : selected, content || '')}>{rt('download')}</button>
         <button className="tool-btn outline" onClick={() => {
           const zipped = zipSync(Object.fromEntries(Object.entries(current.files).map(([name, text]) => [`${current.folder}/${name}`, strToU8(text)])));
@@ -45,6 +46,6 @@ export function RunPackage() {
     </div>
     <p className="mt-1 text-muted">{rt('requirements')}</p>
     {error && <p role="alert" className="text-red-500">{error}</p>}
-    {current && <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap">{content}</pre>}
+    {current && <pre data-testid="run-package-code" tabIndex={0} className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap break-words pb-3">{content}</pre>}
   </section>;
 }

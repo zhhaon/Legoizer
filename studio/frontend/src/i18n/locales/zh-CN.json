@@ -2323,5 +2323,6 @@
   "explain.scflatten.organization.2.title": "不聚合的输出",
   "explain.scflatten.organization.2.body": "每个原始维度单独对应一个绿色输出，不做池化或注意力。变体的区别在于输入的粒度和组织方式。",
   "explain.organization.hint": "悬停高亮 · 点击定位；悬停左侧节点可反查说明。",
-  "explain.organization.locate": "定位：{{name}}"
+  "explain.organization.locate": "定位：{{name}}",
+  "benchmark.staticSnapshot": "{{count}} 组配置 · 11月16日数据（{{date}}）· 静态快照"
 }

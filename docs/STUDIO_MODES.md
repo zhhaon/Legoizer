@@ -39,10 +39,10 @@ metadata/configuration, never local environment paths, tokens or training record
 The recorded source revision identifies the catalog baseline. Local mode never
 requests `/api`: it uses static catalog/templates, browser validation/compiler,
 local project storage and file import/export. Training/evaluation/resource controls
-explain that execution happens on the user's server. Benchmark requires a backend.
+explain that execution happens on the user's server. Benchmark uses a bundled static snapshot in local mode.
 修改 Python 组件、配置格式、模板或默认值后，请重新生成并提交静态目录。目录只包含公共配置，
 不含令牌、训练历史或本机环境信息。纯前端模式不请求 `/api`，支持本地保存、导入、校验与导出。
-训练、评估、资源准备和 Benchmark 需后端。浏览器校验不会声称完成 Python 实例化检查。
+训练、评估和资源准备需后端；Benchmark 在纯前端模式使用打包的静态快照。浏览器校验不会声称完成 Python 实例化检查。
 
 ## Portable packages / 可迁移配置包
 
@@ -90,3 +90,20 @@ with the same base path used when building. Mode selection overrides a leftover
 预览 Pages 时请使用与构建一致的子路径，例如
 `STUDIO_BASE_PATH=/Legoizer/ npm run preview:pages`。两个构建脚本均显式指定模式，
 不受遗留的 `VITE_STUDIO_MODE` 环境变量影响。
+
+## Static Benchmark / 静态 Benchmark
+
+Local mode reads `public/benchmark.json` from the Pages base path, including all
+configuration details. Filtering, sorting, charts and JSON downloads work without
+backend calls. The display label is November 16 data; `snapshot_date` is the
+requested display date; the static file does not retain capture timestamps.
+This is not a reconstructed historical API response.
+Server mode continues to use the live API. Refresh explicitly from the root:
+
+```bash
+.venv/bin/python -m studio.scripts.export_benchmark --display-date 2026-11-16
+```
+
+纯前端从 Pages 子路径加载静态列表及全部配置详情，保留筛选、排序、图表和下载。
+界面按要求标注“11月16日数据”；文件不保留实际抓取时间。
+服务器模式继续使用实时 API。更新静态快照后需重新构建 Pages。

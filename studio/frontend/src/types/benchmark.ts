@@ -23,9 +23,10 @@ export interface BenchmarkEntry extends OfficialEvaluation {
   metrics: Record<string, { mean: number; std: number | null; count: number }>;
 }
 export interface BenchmarkIndex {
+  snapshot_date?: string;
   evaluations: BenchmarkEntry[];
   total: number;
   source: string;
-  fetched_at: number;
+  fetched_at?: number;
   cache_seconds: number;
 }

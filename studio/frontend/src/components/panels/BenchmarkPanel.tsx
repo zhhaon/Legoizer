@@ -1,5 +1,4 @@
 import { localMode } from '@/runtime/mode';
-import { rt } from '@/runtime/messages';
 import { BenchmarkDrawer } from '@/components/BenchmarkDrawer';
 import { useStudio } from '@/store/graphStore';
 import { useEffect, useMemo, useState } from 'react';
@@ -10,7 +9,7 @@ import type { BenchmarkIndex, OfficialEvaluation } from '@/types/benchmark';
 
 const number = (value: number | null | undefined) => typeof value === 'number' && Number.isFinite(value) ? value.toFixed(4) : '—';
 
-function ServerBenchmarkPanel() {
+export function BenchmarkPanel() {
   const locale = useLocale();
   const [index, setIndex] = useState<BenchmarkIndex | null>(null);
   const [loading, setLoading] = useState(false);
@@ -78,7 +77,7 @@ function ServerBenchmarkPanel() {
       {loading && <p role="status">{tr('benchmark.loading')}</p>}
       {error && <p role="alert" className="mb-2 text-red-500">{tr('benchmark.error')} {error}</p>}
       {index && <>
-        <p className="mb-2 text-muted">{tr('benchmark.snapshot', { count: index.total, time: new Date(index.fetched_at * 1000).toLocaleString(locale) })}</p>
+        <p className="mb-2 text-muted">{localMode ? tr('benchmark.staticSnapshot', { count: index.total, date: index.snapshot_date || '2026-11-16' }) : tr('benchmark.snapshot', { count: index.total, time: new Date((index.fetched_at ?? 0) * 1000).toLocaleString(locale) })}</p>
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <select aria-label={tr('benchmark.dataset')} className="field-input !w-auto" value={dataset} onChange={e => selectDataset(e.target.value)}>
             <option value="">{tr('benchmark.allDatasets')}</option>{datasets.map(value => <option key={value}>{value}</option>)}
@@ -150,5 +149,3 @@ function ServerBenchmarkPanel() {
     </section>
   );
 }
-
-export function BenchmarkPanel() { useLocale(); return localMode ? <p className="p-4 text-sm">{rt("serverOnly")}</p> : <ServerBenchmarkPanel />; }

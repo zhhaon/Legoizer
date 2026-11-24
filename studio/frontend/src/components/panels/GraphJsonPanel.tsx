@@ -1,3 +1,5 @@
+import { copyText } from '@/utils/clipboard';
+import { rt } from '@/runtime/messages';
 import { tr, useLocale } from '@/i18n';
 import { useState } from 'react';
 import { Braces, Clipboard, Download, Upload } from 'lucide-react';
@@ -22,7 +24,7 @@ export function GraphJsonPanel() {
         <div className="flex items-center justify-between border-b border-line px-3 py-1.5">
           <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted"><Braces size={12} /> {tr("ui.graph_json__cac044")} {graph.nodes.length} {tr("ui.nodes__6cf762")} {graph.edges.length} {tr("ui.edges_7283b9")}</span>
           <div className="flex gap-1">
-            <button className="tool-btn !h-6 !px-1.5 !text-[9.5px]" onClick={() => { void navigator.clipboard?.writeText(textValue); toast('success', 'Copied Graph JSON'); }}><Clipboard size={11} /> {tr("ui.copy_af74f7")}</button>
+            <button className="tool-btn !h-6 !px-1.5 !text-[9.5px]" onClick={() => { void copyText(textValue).then(() => toast('success', rt('copied'))).catch(error => toast('error', rt('copyFailed'), String(error))); }}><Clipboard size={11} /> {tr("ui.copy_af74f7")}</button>
             <button className="tool-btn !h-6 !px-1.5 !text-[9.5px]" onClick={exportGraph}><Download size={11} /> {tr("ui.export_f3e4fa")}</button>
             <button className="tool-btn !h-6 !px-1.5 !text-[9.5px]" onClick={() => downloadText(`${graph.graph_id}.json`, textValue, 'application/json')}><Download size={11} /> {tr("ui.download_a479c9")}</button>
           </div>

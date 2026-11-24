@@ -1,3 +1,5 @@
+import { localMode } from '@/runtime/mode';
+import { rt } from '@/runtime/messages';
 import { BenchmarkDrawer } from '@/components/BenchmarkDrawer';
 import { useStudio } from '@/store/graphStore';
 import { useEffect, useMemo, useState } from 'react';
@@ -8,7 +10,7 @@ import type { BenchmarkIndex, OfficialEvaluation } from '@/types/benchmark';
 
 const number = (value: number | null | undefined) => typeof value === 'number' && Number.isFinite(value) ? value.toFixed(4) : '—';
 
-export function BenchmarkPanel() {
+function ServerBenchmarkPanel() {
   const locale = useLocale();
   const [index, setIndex] = useState<BenchmarkIndex | null>(null);
   const [loading, setLoading] = useState(false);
@@ -148,3 +150,5 @@ export function BenchmarkPanel() {
     </section>
   );
 }
+
+export function BenchmarkPanel() { useLocale(); return localMode ? <p className="p-4 text-sm">{rt("serverOnly")}</p> : <ServerBenchmarkPanel />; }

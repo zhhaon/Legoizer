@@ -36,7 +36,7 @@ export function PropertiesPanel() {
 
 
   return (
-    <aside aria-label={tr("ui.properties_panel_b9bd0a")} className="panel flex min-h-0 flex-col border-l">
+    <aside data-tour-target="properties" aria-label={tr("ui.properties_panel_b9bd0a")} className="panel flex min-h-0 flex-col border-l">
       <div className="flex items-center justify-between border-b border-line px-3 py-2.5">
         <h2 className="text-[11px] font-bold uppercase tracking-wider text-muted">{tr("ui.properties_bc6c88")}</h2>
         <Settings2 size={13} className="text-muted" />

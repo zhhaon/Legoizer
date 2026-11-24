@@ -1,3 +1,5 @@
+import { localMode } from '@/runtime/mode';
+import { rt } from '@/runtime/messages';
 import { message } from '@/i18n';
 import { configLayout, type Sizes } from '@/canvas/layout';
 import { create } from 'zustand';
@@ -314,7 +316,7 @@ export const useStudio = create<StudioState>((set, get) => {
         });
         log(message("messages.e02d214f07a8", { p0: catalog.components.length, p1: catalog.generated_from }));
         log(message("messages.661af91c5e4f", { p0: templateResponse.templates.filter((t) => t.available).length }));
-        for (const warning of environment.warnings) log(`ENV: ${warning}`);
+        for (const warning of environment?.warnings || []) log(`ENV: ${warning}`);
         const restored = get().restoreLocal();
         if (!restored) {
           const naml = templateResponse.templates.find((t) => t.id === 'naml' && t.available);
@@ -327,7 +329,7 @@ export const useStudio = create<StudioState>((set, get) => {
         void get().validateGraph();
       } catch (error) {
         set({ loading: false });
-        notify('error', 'Backend unavailable', String(error));
+        notify('error', localMode ? rt('error') : 'Backend unavailable', String(error));
         log(`ERROR: ${String(error)}`);
       }
     },
@@ -692,11 +694,11 @@ export const useStudio = create<StudioState>((set, get) => {
       try {
         const result = await api.compile(get().graph);
         set({ compileResult: result, validation: result.validation, compiling: false });
-        log(message("messages.d33736574055", { p0: result.model_label, p1: result.generated_file }));
+        log(localMode ? rt('staticCheck') : message("messages.d33736574055", { p0: result.model_label, p1: result.generated_file }));
         for (const note of result.notes.slice(-4)) log(`  ${note}`);
-        notify(result.compatible_with_reference ? 'success' : 'warning',
+        notify(localMode ? 'info' : result.compatible_with_reference ? 'success' : 'warning',
           message("messages.19656803fe6c", { p0: result.model_label }),
-          result.compatible_with_reference ? 'Verified by trainer.get_configurations()' : result.notes.at(-1));
+          localMode ? rt('staticCheck') : result.compatible_with_reference ? 'Verified by trainer.get_configurations()' : result.notes.at(-1));
         return result;
       } catch (error) {
         set({ compiling: false });
@@ -725,7 +727,7 @@ export const useStudio = create<StudioState>((set, get) => {
         await api.saveGraph(graph);
         set({ dirty: false });
         log(message("messages.4f22156dba80", { p0: graph.name, p1: graph.nodes.length }));
-        if (!silent) notify('success', 'Project saved', message("messages.5a75b0810e81", { p0: graph.name }));
+        if (!silent) notify('success', localMode ? rt('storage') : 'Project saved', message("messages.5a75b0810e81", { p0: graph.name }));
       } catch (error) {
         set({ dirty: false });
         log(message("messages.22ff672c062b", { p0: String(error) }));
@@ -875,6 +877,7 @@ export const useStudio = create<StudioState>((set, get) => {
     },
 
     train: async (preflightOnly = false, hfToken) => {
+      if (localMode) { set({ bottomTab: 'yaml', bottomOpen: true }); notify('info', rt('serverOnly')); return; }
       set({ bottomTab: 'training', bottomOpen: true });
       const report = await get().validateGraph();
       if (!report?.valid) {
@@ -903,6 +906,7 @@ export const useStudio = create<StudioState>((set, get) => {
     },
 
     evaluate: async () => {
+      if (localMode) { set({ bottomTab: 'yaml', bottomOpen: true }); notify('info', rt('serverOnly')); return; }
       const report = await get().validateGraph();
       if (!report?.valid) {
         notify('error', 'Evaluation blocked', 'Fix the validation errors first.');

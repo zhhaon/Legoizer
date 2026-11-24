@@ -50,7 +50,7 @@ export function DetailNode({ data }: NodeProps<DetailFlowNode>) {
         id={`port:${port.name}`} style={{ top: `${(index + 1) * 100 / (spec.inputs.length + 1)}%` }} />)}
       {spec.outputs.map((port, index) => <Handle key={`out:${port.name}`} type="source" position={Position.Right}
         id={`port:${port.name}`} style={{ top: `${(index + 1) * 100 / (spec.outputs.length + 1)}%` }} />)}
-      <div className="nowheel max-h-60 overflow-y-auto space-y-1" aria-label={tr("ui.configurable_properties_a0baa4")}>
+      <div className="max-h-60 overflow-y-auto space-y-1" aria-label={tr("ui.configurable_properties_a0baa4")}>
         {spec.role === 'dataset' && <div data-param-name="lm" className="flex items-start justify-between gap-2 text-[9.5px]">
           <span>{tr("ui.lm_aea416")}</span><span className="min-w-0 break-words text-right font-mono font-medium" title={tokens.lm}>{tokens.lm}</span>
         </div>}

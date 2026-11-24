@@ -29,7 +29,7 @@ export function BottomPanel({ height = 264 }: { height?: number }) {
   const currentRun = useStudio((s) => s.currentRun);
 
   return (
-    <div className="panel flex shrink-0 flex-col border-t" style={{ height: open ? height : 34 }}>
+    <div data-tour-target="results" className="panel flex shrink-0 flex-col border-t" style={{ height: open ? height : 34 }}>
       <div className="flex h-[33px] shrink-0 items-center justify-between border-b border-line px-2">
         <div className="flex h-full items-center">
           {TABS.map((item) => (

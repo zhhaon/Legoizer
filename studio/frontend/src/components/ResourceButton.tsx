@@ -1,3 +1,4 @@
+import { apiBase, localMode } from '@/runtime/mode';
 import { tr, useLocale } from '@/i18n';
 import { createPortal } from 'react-dom';
 import { useEffect, useRef, useState } from 'react';
@@ -12,10 +13,11 @@ export function ResourceButton({ component, params = {} }: { component: string; 
   const { token } = useTrainingCredentials();
   const identity = JSON.stringify([component, params]);
   useEffect(() => {
+    if (localMode) return;
     let active = true;
     const check = async () => {
       try {
-        const response = await fetch('/api/resources/status', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify([{ component, params }]) });
+        const response = await fetch(`${apiBase}/resources/status`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify([{ component, params }]) });
         if (!response.ok) throw new Error(tr("ui.resource_check_failed_094244"));
         const body = await response.json();
         if (active) setStatus(body.items[0]);
@@ -27,7 +29,7 @@ export function ResourceButton({ component, params = {} }: { component: string; 
     const timer = window.setInterval(check, 5000);
     return () => { active = false; window.clearInterval(timer); window.removeEventListener('studio-resources-changed', check); };
   }, [identity]);
-  if (status.state === 'unnecessary') return null;
+  if (localMode || status.state === 'unnecessary') return null;
   const busy = ['checking', 'downloading'].includes(status.state);
   const ready = status.state === 'ready';
   const configure = status.state === 'configure';
@@ -39,7 +41,7 @@ export function ResourceButton({ component, params = {} }: { component: string; 
       e.stopPropagation();
       setStatus({ state: 'downloading' });
       try {
-        const response = await fetch('/api/resources/download', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { 'X-Hugging-Face-Token': token } : {}) }, body: JSON.stringify({ component, params }) });
+        const response = await fetch(`${apiBase}/resources/download`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { 'X-Hugging-Face-Token': token } : {}) }, body: JSON.stringify({ component, params }) });
         const result = await response.json();
         if (!response.ok) throw new Error(result.detail || 'Download failed');
         setStatus(result);
@@ -57,7 +59,7 @@ export function ResourceButton({ component, params = {} }: { component: string; 
         setConfirmDelete(false);
         setStatus({ state: 'checking' });
         try {
-          const response = await fetch('/api/resources/delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ component, params }) });
+          const response = await fetch(`${apiBase}/resources/delete`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ component, params }) });
           const result = await response.json();
           if (!response.ok) throw new Error(result.detail || 'Delete failed');
           setStatus(result);

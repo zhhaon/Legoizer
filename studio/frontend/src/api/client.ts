@@ -11,7 +11,10 @@ import type {
 import type { ComponentCatalog, TemplateSummary } from '@/types/catalog';
 import type { DatasetInput, GraphJson } from '@/types/graph';
 
-const BASE = '/api';
+import { apiBase, localMode } from '@/runtime/mode';
+import { localApi } from '@/runtime/local';
+import { rt } from '@/runtime/messages';
+const BASE = apiBase;
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
@@ -44,7 +47,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 const post = <T>(path: string, body: unknown): Promise<T> =>
   request<T>(path, { method: 'POST', body: JSON.stringify(body) });
 
-export const api = {
+const serverApi = {
   benchmark: () => request<BenchmarkIndex>('/benchmark/evaluations'),
   benchmarkDetail: (signature: string) => request<{ evaluation: OfficialEvaluation; source: string }>(`/benchmark/evaluations/${encodeURIComponent(signature)}`),
   health: () => request<{ status: string }>('/health'),
@@ -102,3 +105,14 @@ export function downloadText(filename: string, content: string, mime = 'text/pla
   document.body.removeChild(anchor);
   URL.revokeObjectURL(url);
 }
+
+/** Explicit mode selection: a server failure never silently changes the catalog. */
+export const api: typeof serverApi = new Proxy(serverApi, {
+  get(target, key: keyof typeof serverApi) {
+    if (!localMode) return target[key];
+    if (key in localApi) return localApi[key as keyof typeof localApi];
+    if (key === 'runs') return async () => ({ runs: [] });
+    if (key === 'environment') return async () => null;
+    return async () => { throw new Error(rt('serverOnly')); };
+  },
+});

@@ -1,3 +1,6 @@
+import { RunPackage } from '../RunPackage';
+import { localMode } from '@/runtime/mode';
+import { rt } from '@/runtime/messages';
 import { tr, useLocale } from '@/i18n';
 import { useEffect, useState } from 'react';
 import { Check, Clipboard, Download, FileCode2, RefreshCw, Upload } from 'lucide-react';
@@ -23,7 +26,7 @@ export function YamlPanel() {
   }, [result?.reference_yaml]);
 
   return (
-    <div className="grid h-full grid-cols-[minmax(0,1fr)_minmax(0,1fr)_240px] divide-x divide-line">
+    <div className="flex h-full flex-col"><RunPackage /><div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_minmax(0,1fr)_240px] divide-x divide-line">
       <div className="flex min-h-0 flex-col">
         <div className="flex items-center justify-between border-b border-line px-3 py-1.5">
           <span className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted">
@@ -65,8 +68,8 @@ export function YamlPanel() {
           {result && (
             <>
               <div className={`mb-2 rounded-md border p-2 ${result.compatible_with_reference ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30' : 'border-red-200 bg-red-50 text-red-700 dark:bg-red-950/30'}`}>
-                <b>{result.compatible_with_reference ? tr("ui.verified_by_legommenders_82323e") : tr("ui.verification_issues_5de79d")}</b>
-                <p className="mt-1 opacity-80">{tr("ui.trainer_get_configurations_classhub_and_real_config__614349")}</p>
+                <b>{localMode ? rt("staticCheck") : result.compatible_with_reference ? tr("ui.verified_by_legommenders_82323e") : tr("ui.verification_issues_5de79d")}</b>
+                <p className="mt-1 opacity-80">{localMode ? rt("staticCheck") : tr("ui.trainer_get_configurations_classhub_and_real_config__614349")}</p>
               </div>
               <div className="mb-2 space-y-1 text-muted">
                 <p><b>{tr("ui.model__9e1279")}</b> {result.model_label}</p>
@@ -79,7 +82,7 @@ export function YamlPanel() {
                   <p key={index} className="rounded border border-line bg-[var(--hover)] px-2 py-1 text-muted">· {result.note_translations?.[index] ? tr(result.note_translations[index]!.key, result.note_translations[index]!.params, note) : note}</p>
                 ))}
               </div>
-              <button className="tool-btn outline mt-2 w-full justify-center !text-[10px]" onClick={() => void verifyGraph()}> {tr("ui.re_run_framework_check_73678c")} </button>
+              <button className="tool-btn outline mt-2 w-full justify-center !text-[10px]" disabled={localMode} onClick={() => void verifyGraph()}> {tr("ui.re_run_framework_check_73678c")} </button>
             </>
           )}
           <div className="mt-3 border-t border-line pt-2">
@@ -103,6 +106,6 @@ export function YamlPanel() {
           </div>
         </div>
       </div>
-    </div>
+    </div></div>
   );
 }

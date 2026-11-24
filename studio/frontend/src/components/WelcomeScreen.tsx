@@ -1,10 +1,12 @@
+import { useState } from 'react';
 import { tr, useLocale } from '@/i18n';
 import { LanguageSelect } from './LanguageSelect';
 import { ArrowRight, Boxes, FileCode2, FolderOpen, Layers3, Sparkles, X } from 'lucide-react';
 import { useStudio } from '@/store/graphStore';
 
-export function WelcomeScreen() {
+export function WelcomeScreen({ onDemoLoaded }: { onDemoLoaded?: () => void }) {
   useLocale();
+  const [openingDemo, setOpeningDemo] = useState(false);
   const visible = useStudio((s) => s.welcomeVisible);
   const templates = useStudio((s) => s.templates);
   const dismiss = useStudio((s) => s.dismissWelcome);
@@ -89,7 +91,16 @@ export function WelcomeScreen() {
           <div className="mt-4 flex items-center justify-between rounded-lg border border-line bg-[var(--hover)] px-3 py-2">
             <p className="text-[10px] text-muted">
               <b>{tr("ui.demo_path__f0ca8a")}</b> {tr("ui.naml_replace_additive_attention_with_gru_validate_ge_ffea6c")} </p>
-            <button className="tool-btn primary !text-[10.5px]" onClick={() => void loadTemplate('naml-demo')}> {tr("ui.open_naml_demo_99e6e3")} <ArrowRight size={12} />
+            <button className="tool-btn primary !text-[10.5px]" disabled={openingDemo} aria-busy={openingDemo} onClick={async () => {
+              if (openingDemo) return;
+              setOpeningDemo(true);
+              const version = useStudio.getState().graphLoadVersion;
+              try {
+                await loadTemplate('naml-demo');
+                const state = useStudio.getState();
+                if (state.graphLoadVersion > version && state.graph.template_id === 'naml-demo' && !state.welcomeVisible && state.graph.nodes.length > 0) onDemoLoaded?.();
+              } finally { setOpeningDemo(false); }
+            }}> {openingDemo ? tr('tour.openingDemo') : tr("ui.open_naml_demo_99e6e3")} <ArrowRight size={12} />
             </button>
           </div>
         </div>

@@ -12,6 +12,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from studio.backend.i18n import error_reference
 from fastapi.staticfiles import StaticFiles
 
+from studio.backend.api.export import router as export_router
 from studio.backend.api.routes import router
 from studio.backend.benchmark import router as benchmark_router
 from studio.backend.config import STUDIO_ROOT
@@ -46,6 +47,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(export_router)
 app.include_router(router)
 app.include_router(benchmark_router)
 

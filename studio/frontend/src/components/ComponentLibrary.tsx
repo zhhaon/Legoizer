@@ -1,3 +1,5 @@
+import { ComponentExplanation } from './ComponentExplanation';
+import { explanationFor } from '@/explanations/catalog';
 import { DatasetInputSummary } from './DatasetInputSummary';
 import { visiblePropertyParameters } from '@/utils/propertyParameters';
 import { tokenResources } from '@/utils/tokenResources';
@@ -6,7 +8,7 @@ import { text, tr, useLocale } from '@/i18n';
 import i18next from '@/i18n';
 import { ResourceButton } from './ResourceButton';
 import { useMemo, useState } from 'react';
-import { ChevronDown, ChevronRight, Info, Search, X } from 'lucide-react';
+import { ChevronDown, ChevronRight, CircleHelp, Info, Search, X } from 'lucide-react';
 import { useStudio } from '@/store/graphStore';
 import type { ComponentSpec } from '@/types/catalog';
 import { CATEGORY_COLORS, iconFor } from '@/utils/ui';
@@ -19,6 +21,7 @@ export function ComponentLibrary() {
   const toggleCategory = useStudio((s) => s.toggleCategory);
   const [query, setQuery] = useState('');
   const [detail, setDetail] = useState<ComponentSpec | null>(null);
+  const [learning, setLearning] = useState<ComponentSpec | null>(null);
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -35,7 +38,7 @@ export function ComponentLibrary() {
   }, [filtered]);
 
   return (
-    <aside className="panel flex min-h-0 flex-col border-r">
+    <aside data-tour-target="library" className="panel flex min-h-0 flex-col border-r">
       <div className="border-b border-line px-3 py-2.5">
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-[11px] font-bold uppercase tracking-wider text-muted">{tr("ui.component_library_edbe6c")}</h2>
@@ -78,6 +81,7 @@ export function ComponentLibrary() {
                 <div className="mt-0.5 space-y-0.5">
                   {items.map((component) => {
                     const Icon = iconFor(component.icon);
+                    const explanation = explanationFor(component.id);
                     return (
                       <div
                         key={component.id}
@@ -102,7 +106,15 @@ export function ComponentLibrary() {
                           <p className="mt-0.5 line-clamp-2 text-[9.5px] leading-snug text-muted">{componentText(component, 'description')}</p>
                         </div>
                         {['dataset', 'item_encoder'].includes(component.category) && <ResourceButton component={component.id} />}
-                        <Info size={11} className="mt-1 shrink-0 text-muted opacity-0 transition-opacity group-hover:opacity-100" />
+                        <div className="lib-help-actions">
+                          <button type="button" draggable={false} title={tr('explain.details')} aria-label={tr('explain.details')}
+                            onDragStart={e => { e.preventDefault(); e.stopPropagation(); }}
+                            onClick={e => { e.stopPropagation(); setDetail(component); }}><Info size={13} /></button>
+                          {explanation && <button type="button" draggable={false} data-explain-component={component.id}
+                            title={tr('explain.open')} aria-label={tr('explain.open')}
+                            onDragStart={e => { e.preventDefault(); e.stopPropagation(); }}
+                            onClick={e => { e.stopPropagation(); setLearning(component); }}><CircleHelp size={14} /></button>}
+                        </div>
                       </div>
                     );
                   })}
@@ -117,6 +129,8 @@ export function ComponentLibrary() {
         )}
       </div>
 
+      {learning && explanationFor(learning.id) && <ComponentExplanation key={learning.id} component={learning} explanation={explanationFor(learning.id)!}
+        onClose={() => setLearning(null)} onDetails={() => { setDetail(learning); setLearning(null); }} />}
       {detail && <ComponentDetail component={detail} onClose={() => setDetail(null)} />}
     </aside>
   );

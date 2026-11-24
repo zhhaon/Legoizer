@@ -1,3 +1,5 @@
+import { localMode } from '@/runtime/mode';
+import { RunPackage } from '../RunPackage';
 import { text, tr, useLocale } from '@/i18n';
 import { mergeLogRows } from '@/utils/progressLog';
 import { TrainingSettings } from '@/components/TrainingSettings';
@@ -9,7 +11,7 @@ import { api } from '@/api/client';
 import { useStudio } from '@/store/graphStore';
 import type { RunStatus } from '@/types/api';
 
-export function TrainingPanel() {
+function ServerTrainingPanel() {
   useLocale();
   const graph = useStudio((s) => s.graph);
   const environment = useStudio((s) => s.environment);
@@ -166,3 +168,5 @@ function Row({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+export function TrainingPanel() { return localMode ? <div className="h-full overflow-auto"><RunPackage /></div> : <ServerTrainingPanel />; }

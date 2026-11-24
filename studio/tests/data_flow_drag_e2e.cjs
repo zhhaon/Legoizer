@@ -20,6 +20,32 @@ const assert=require('node:assert/strict');
   const graph=JSON.parse(await page.locator('pre.code-view').innerText());
   await page.getByRole('button',{name:lang==='en'?'Focus canvas':'聚焦画布',exact:true}).click();
   await page.waitForTimeout(900);
+  // Trackpad two-finger gestures must pan even over node configuration rows.
+  const viewport = () => page.locator('.react-flow__viewport').evaluate(el => {
+   const m = new DOMMatrixReadOnly(getComputedStyle(el).transform);
+   return { x: m.m41, y: m.m42, zoom: m.a };
+  });
+  const regions = page.locator('.react-flow__node-detail [aria-label][class*="overflow-y-auto"]');
+  assert.ok(await regions.count(), 'Exercise configurable Data Flow nodes');
+  for (let i = 0; i < await regions.count(); i++) {
+   for (const [dx, dy] of [[80, 0], [0, 80], [60, 40]]) {
+    await page.getByRole('button', {name: lang === 'en' ? 'Fit' : '适应视图', exact: true}).click();
+    await page.waitForTimeout(500);
+    const region = regions.nth(i), box = await region.boundingBox();
+    assert.ok(box, 'Configuration region is visible');
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    const before = await viewport();
+    await page.mouse.wheel(dx, dy);
+    await page.waitForTimeout(150);
+    const after = await viewport();
+    assert.equal(after.zoom, before.zoom, 'Trackpad pan preserves zoom');
+    if (dx) assert.ok(after.x < before.x - 1, 'Horizontal pan over configuration');
+    if (dy) assert.ok(after.y < before.y - 1, 'Vertical pan over configuration');
+   }
+  }
+  await page.getByRole('button', {name: lang === 'en' ? 'Fit' : '适应视图', exact: true}).click();
+  await page.waitForTimeout(500);
+  console.log('PASS '+lang+': trackpad pans over every configuration region in both axes');
   const ids=await page.locator('.react-flow__node-detail').evaluateAll(nodes=>nodes.map(node=>node.dataset.id));
   const node=id=>page.locator('.react-flow__node-detail[data-id="'+id+'"]');
   const position=locator=>locator.evaluate(el=>{const t=el.style.transform.match(/translate\(([-\d.]+)px,\s*([-\d.]+)px\)/);return {x:Number(t[1]),y:Number(t[2])}});

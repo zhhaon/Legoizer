@@ -1,3 +1,4 @@
+import { StudioTour } from '@/components/StudioTour';
 import { tr, useLocale } from '@/i18n';
 import { BenchmarkPanel } from '@/components/panels/BenchmarkPanel';
 import { LanguageSelect } from '@/components/LanguageSelect';
@@ -25,6 +26,8 @@ export default function App() {
     return () => window.removeEventListener('hashchange', sync);
   }, []);
   const [canvasFocused, setCanvasFocused] = useState(false);
+  const [tourOpen, setTourOpen] = useState(false);
+  useEffect(() => { if (benchmarkPage) setTourOpen(false); }, [benchmarkPage]);
   const [viewport, setViewport] = useState({ width: window.innerWidth, height: window.innerHeight });
   const [sizes, setSizes] = useState(() => {
     const defaults = { left: window.innerWidth <= 1280 ? 224 : 264, right: window.innerWidth <= 1280 ? 268 : 300, bottom: 264 };
@@ -48,7 +51,7 @@ export default function App() {
   useEffect(() => { try { localStorage.setItem('studio-panel-sizes', JSON.stringify(sizes)); } catch { /* Storage is optional. */ } }, [sizes]);
   const theme = useStudio((s) => s.theme);
   const init = useStudio((s) => s.init);
-  useKeyboardShortcuts(!benchmarkPage);
+  useKeyboardShortcuts(!benchmarkPage && !tourOpen);
 
   useEffect(() => { void init(); }, [init]);
   useEffect(() => {
@@ -70,7 +73,7 @@ export default function App() {
           <ComponentLibrary />
           <ResizeHandle disabled={canvasFocused} label={tr("ui.resize_left_panel_78c65b")} value={left} min={160} max={sideBudget - right} onChange={left => setSizes(previous => ({ ...previous, left }))} />
           <main className="flex min-h-0 min-w-0 flex-col">
-            <div className="min-h-0 flex-1">
+            <div data-tour-target="canvas" tabIndex={-1} className="min-h-0 flex-1">
               <ReactFlowProvider>
                 <ModelCanvas focused={canvasFocused} onFocusChange={setCanvasFocused} />
               </ReactFlowProvider>
@@ -81,7 +84,12 @@ export default function App() {
           <ResizeHandle disabled={canvasFocused} label={tr("ui.resize_right_panel_1a60c2")} value={right} min={200} max={sideBudget - left} onChange={right => setSizes(previous => ({ ...previous, right }))} />
           <PropertiesPanel />
         </div>
-        {!benchmarkPage && <WelcomeScreen />}
+        {!benchmarkPage && <WelcomeScreen onDemoLoaded={() => {
+          setCanvasFocused(false);
+          useStudio.getState().setBottomOpen(true);
+          setTourOpen(true);
+        }} />}
+        {!benchmarkPage && tourOpen && <StudioTour onClose={() => setTourOpen(false)} />}
         <Dialogs />
         <Toasts />
       </div>

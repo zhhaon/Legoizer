@@ -1,3 +1,5 @@
+import { localMode } from '@/runtime/mode';
+import { rt } from '@/runtime/messages';
 import { tr, useLocale } from '@/i18n';
 import { paramLabel } from '@/i18n/display';
 import { useMemo } from 'react';
@@ -16,7 +18,7 @@ const METRIC_LABELS: Record<string, string> = {
   LogLoss: 'LogLoss', LRAP: 'LRAP',
 };
 
-export function EvaluationPanel() {
+function ServerEvaluationPanel() {
   useLocale();
   const run = useStudio((s) => s.currentRun);
   const graph = useStudio((s) => s.graph);
@@ -188,3 +190,5 @@ function ChartCard({ title, icon, empty, children }: {
     </div>
   );
 }
+
+export function EvaluationPanel() { useLocale(); return localMode ? <p className="p-4 text-sm">{rt("serverOnly")}</p> : <ServerEvaluationPanel />; }

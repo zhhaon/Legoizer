@@ -48,7 +48,7 @@ const catalog = { components: [...components.values()], categories: [...new Set(
     const search = page.getByRole('textbox', { name: 'Search components' });
     const addFromDetails = async id => {
       await search.fill(id);
-      const component = page.locator('.lib-item').filter({ has: page.getByText(id, { exact: true }) }).first();
+      const component = page.locator(`[data-component-id="${id}"]`);
       assert(!(await component.getAttribute('title')).includes('double-click'));
       await component.click();
       const hasSameRole = (await read()).nodes.some(n => components.get(n.component)?.role === components.get(id).role);

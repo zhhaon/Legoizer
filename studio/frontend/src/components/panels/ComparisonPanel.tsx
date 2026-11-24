@@ -1,3 +1,5 @@
+import { localMode } from '@/runtime/mode';
+import { rt } from '@/runtime/messages';
 import { componentText } from '@/i18n/display';
 import type { RunRecord } from '@/types/api';
 import { MixedComparison } from './MixedComparison';
@@ -8,7 +10,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Columns3, FlaskConical, Trash2 } from 'lucide-react';
 import { useStudio } from '@/store/graphStore';
 
-export function ComparisonPanel() {
+function ServerComparisonPanel() {
   useLocale();
   const runs = useStudio((s) => s.runs);
   const components = useStudio((s) => s.components);
@@ -124,3 +126,5 @@ export function ComparisonPanel() {
     </div>
   );
 }
+
+export function ComparisonPanel() { useLocale(); return localMode ? <p className="p-4 text-sm">{rt("serverOnly")}</p> : <ServerComparisonPanel />; }

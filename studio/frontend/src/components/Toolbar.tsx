@@ -45,7 +45,7 @@ export function Toolbar() {
   };
 
   return (
-    <header className="studio-toolbar panel relative z-40 flex items-center gap-2 border-b px-3 shadow-sm">
+    <header data-tour-target="toolbar" className="studio-toolbar panel relative z-40 flex items-center gap-2 border-b px-3 shadow-sm">
       <div className="flex min-w-0 items-center gap-2.5">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white">
           <Boxes size={17} strokeWidth={2.2} />
@@ -110,7 +110,7 @@ export function Toolbar() {
         )}
       </div>
 
-      <a className="tool-btn outline !text-[10.5px]" href="#/benchmark">{tr('benchmark.title')}</a>
+      <a data-tour-target="benchmark" className="tool-btn outline !text-[10.5px]" href="#/benchmark">{tr('benchmark.title')}</a>
       <div className="flex-1" />
       <LanguageSelect />
 

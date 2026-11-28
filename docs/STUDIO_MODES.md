@@ -62,11 +62,17 @@ writes `prepared-model.yaml`, which its training command uses. No automatic
 training or download occurs when exporting. Install the project dependencies and
 provide the raw datasets/authorized HF_TOKEN as needed. All paths are relative to
 the project root. Set device and seed in Training before export. Auto device exports
-GPU 0; select CPU explicitly for CPU servers. The command retains the seed.
+GPU 0; select CPU explicitly for CPU servers. The command retains the seed. In the server-run guide (available in both modes), select CUDA and enter a
+non-negative GPU index for the target server; the command uses that index.
+The original local training panel only selects the device type. Server mode keeps
+the detected GPU dropdown. With CUDA_VISIBLE_DEVICES, enter a visible device index.
 将 ZIP 解压到匹配版本项目根目录。复制方式需按展示目录保存所有文件。先执行资源准备命令，
 再训练；准备步骤可能下载资源并更新包内 data/embed 配置。External HF 会生成 prepared-model.yaml。
 导出操作本身不会下载或训练。目标服务器需要安装依赖、准备原始数据，并在必要时设置 HF_TOKEN。
 设备和种子沿用 Training 设置；自动设备导出为 GPU 0，CPU 服务器请明确选择 CPU。
+两种模式的运行引导均可填写目标服务器的非负显卡编号；原训练设置不提供手动编号输入，
+服务器模式仍保留实际检测到的显卡列表。
+设置 CUDA_VISIBLE_DEVICES 时，请填写可见设备编号。
 
 Local YAML import accepts resolved model YAML; unresolved imports/variables are
 rejected. Graph JSON preserves all training/dataset settings and is preferred for
@@ -107,3 +113,26 @@ Server mode continues to use the live API. Refresh explicitly from the root:
 纯前端从 Pages 子路径加载静态列表及全部配置详情，保留筛选、排序、图表和下载。
 界面按要求标注“11月16日数据”；文件不保留实际抓取时间。
 服务器模式继续使用实时 API。更新静态快照后需重新构建 Pages。
+
+## Guided server execution / 服务器运行引导
+
+In YAML Preview, choose **Export and run on your server**. Local-mode Train opens
+the same four-step dialog; server-mode Train still submits a real run. Enter the
+absolute server project and uploaded ZIP paths, package folder, installation
+state and CPU/GPU settings. The guide provides download, installation, resource
+preparation and training steps, with per-step and full-flow copying. Step
+completion is confirmed by the user, not detected remotely. Missing paths block
+command/package generation. Shell paths are quoted and full flows use &&.
+
+ZIPs include RUN_GUIDE.md, commands.sh and commands.txt alongside the existing
+configs. The script is downloaded, never automatically executed by the browser;
+it stops on errors. To access it before first installation, extract the ZIP into
+a temporary directory on the server and run bash on that script explicitly.
+Keep the original ZIP at the entered upload path. First-install ZIP paths must
+be outside the new checkout. Tokens are not included.
+
+在 YAML 预览选择“导出并在服务器运行”。纯前端“训练”也打开四步引导，服务器模式继续在线训练。
+填写实际项目路径、ZIP 上传路径、安装状态和设备，按下载、安装、准备资源、训练顺序操作。
+每步可复制命令，由用户确认完成；网页不检测或执行远程任务。路径未填写时不生成可执行命令。
+配置包增加中英文 RUN_GUIDE.md、commands.sh 和 commands.txt；脚本遇到错误即停止。
+首次安装可先解压到临时目录取出脚本，再显式执行；ZIP 应放在新项目目录以外。

@@ -53,6 +53,8 @@ export function ConsolePanel() {
             </div>
           )}
           {issues.map((issue, index) => {
+            const actionLabel = issue.severity === 'error' ? 'ui.fix__c341e9'
+              : issue.severity === 'warning' ? 'validationReport.suggestedAction' : 'validationReport.verification';
             const Icon = issue.severity === 'error' ? AlertCircle : issue.severity === 'warning' ? AlertTriangle : Info;
             const color = issue.severity === 'error' ? 'text-red-600 border-red-200 bg-red-50 dark:bg-red-950/30'
               : issue.severity === 'warning' ? 'text-amber-700 border-amber-200 bg-amber-50 dark:bg-amber-950/30'
@@ -67,9 +69,9 @@ export function ConsolePanel() {
                 <span className="flex items-start gap-1.5">
                   <Icon size={12} className="mt-0.5 shrink-0" />
                   <span className="min-w-0 flex-1">
-                    <b className="uppercase tracking-wide">{issue.code.replace(/_/g, ' ')}</b> · {issueText(issue, 'message')}
-                    {issue.reason && <span className="mt-1 block opacity-80">{tr("ui.why__01bb3c")} {issueText(issue, 'reason')}</span>}
-                    {issue.fix && <span className="mt-0.5 block opacity-80">{tr("ui.fix__c341e9")} {issueText(issue, 'fix')}</span>}
+                    <b>{tr(`validationReport.${issue.severity}`)}</b> · <span className="uppercase tracking-wide opacity-70">{issue.code.replace(/_/g, ' ')}</span> · {issueText(issue, 'message')}
+                    {issue.reason && <span className="mt-1 block opacity-80">{tr(issue.severity === 'error' ? "ui.why__01bb3c" : "validationReport.context")} {issueText(issue, 'reason')}</span>}
+                    {issue.fix && <span className="mt-0.5 block opacity-80">{tr(actionLabel)} {issueText(issue, 'fix')}</span>}
                     {issue.node_id && <span className="mt-0.5 block font-mono text-[9px] opacity-70">{tr("ui.node__37c06c")} {issue.node_id} ↗</span>}
                   </span>
                 </span>

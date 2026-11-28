@@ -11,7 +11,9 @@ supports English and Simplified Chinese.
 The repository contains both the visual application and its underlying training
 code. Datasets, pretrained weights, environments, and previous training runs are
 not included. **You do not need a `.data` file:** Studio downloads and prepares
-missing supported datasets when you start training or explicitly acquire resources.
+missing supported datasets when you start training or explicitly acquire resources
+in server mode. Pages users export a package and prepare resources on their own
+execution machine.
 
 ## Requirements
 
@@ -34,6 +36,213 @@ missing supported datasets when you start training or explicitly acquire resourc
 On Ubuntu/WSL2, install Git, curl, and Python 3.11 with its venv support through
 an appropriate package source, or use Conda/Miniforge to provide Python 3.11.
 Installing those system tools is separate from this project's setup script.
+
+### If Node.js or Python 3.11 is missing
+
+Run these checks in the same terminal that will run setup:
+
+```bash
+node -v
+npm -v
+python3.11 --version
+```
+
+`Missing node` means Node is absent from PATH, not a CUDA error. If Node and npm
+are already installed elsewhere, point setup at their **bin directory**:
+
+```bash
+STUDIO_NODE_BIN=/path/to/node/bin \
+bash studio/setup.sh --python /path/to/python3.11 --torch cu128
+```
+
+Both `node -v` and `npm -v` must work from that directory. A copied/broken npm
+launcher is not sufficient. Do not split the filename `studio/setup.sh` across
+lines; a shell continuation backslash belongs at the end of the preceding line.
+
+For a Conda-based installation, one option is a dedicated bootstrap environment:
+
+```bash
+conda create -n legoizer-setup -c conda-forge python=3.11 nodejs=22 -y
+conda activate legoizer-setup
+python --version
+node -v
+npm -v
+
+# Run from the cloned Legoizer project root.
+bash studio/setup.sh --python "$(command -v python)" --torch cu128
+```
+
+`python3.11: command not found` means the default bootstrap interpreter is not
+on PATH. Activate a Python 3.11 environment and pass its executable with
+`--python "$(command -v python)"`, as in the example above.
+
+Use `--torch cpu` for CPU installation. The selected bootstrap Python creates the
+project's `.venv`; activate `.venv` for manual training commands afterwards.
+`STUDIO_PYTHON` selects the runtime interpreter, whereas setup's `--python` selects
+the interpreter used to create `.venv`. Setup does not replace an existing `.venv`
+with a different Python version; it reports a version mismatch instead.
+
+## Choose how to use Legoizer
+
+| User | Where to work | What runs there |
+| --- | --- | --- |
+| GitHub Pages visitor | Browser, then your own Linux/WSL2 server | Edit/export configs and view static Benchmark in the browser; prepare resources and train on your server |
+| Local CPU user | Linux or WSL2 | Run frontend and backend together; prepare resources, train and evaluate through Studio |
+| GPU server user | Server plus a local browser over SSH | Run frontend/API, resource preparation and training on the server |
+| CLI-only execution user | Linux/WSL2 terminal | Install the project, download or copy a configuration package, prepare resources and train without starting the web service |
+| Website maintainer | Node build environment and GitHub Actions | Build/publish the static frontend without a Python web service |
+
+Browser-only visitors do not need Python, Node or CUDA on the computer used to
+open Pages. The runtime requirements above apply to the machine that installs,
+prepares resources or trains models. CPU/GPU installation and startup steps are
+in the following sections. Detailed mode behavior is in
+[Studio modes and portable packages](docs/STUDIO_MODES.md).
+
+### GitHub Pages visitors
+
+Use the published site to edit a model and view the static Benchmark. The site
+runs in your browser; it cannot inspect your server's GPUs, download resources
+onto your server, or start Python training there.
+
+Select a template and dataset, edit the model and training settings, then open
+**YAML Preview > Export and run on your server**. Follow the portable workflow
+below on your own Linux/WSL2 execution machine. Clicking **Train** in browser-only
+mode also opens this guide.
+
+### Users with a frontend and backend
+
+Follow the CPU or NVIDIA GPU installation sections below, then open Studio.
+Use **Train** and **Evaluate** to run jobs on the machine hosting the backend;
+the browser shows progress and results. The training settings list GPUs detected
+on that machine.
+
+You can also open **YAML Preview > Export and run on your server** to download
+or copy a package and run it from a terminal, including on a different machine.
+The same four-step guide is available in both deployment modes. Its manual GPU
+index describes the target execution machine, which may differ from the machine
+hosting the backend. Recheck the device before starting a job through Studio.
+
+### Export and run on another machine
+
+Choose one of the two workflows below: use a ZIP with the generated guide, or
+copy configuration files and run the manual commands. A Studio web service is
+not required on the execution machine for either CLI workflow. The installation
+script still requires Python 3.11, Node.js 20 or newer, npm, Git and curl.
+
+The guide preserves the graph's random seed in the generated `--seed` argument.
+There is no separate seed input in the training settings or guide. Change the
+CLI argument if you need another seed.
+
+#### Download a ZIP and use the generated guide
+
+1. Open **YAML Preview > Export and run on your server** before setting the
+   package directory. In the guide, confirm the project path, ZIP path, package
+   name and installation option.
+2. Replace the prefilled project path `/home/you/projects/Legoizer` with your
+   actual absolute server path. The ZIP path defaults to
+   `/tmp/legoizer-export.zip`; keep it only if that is where you will upload the
+   file. These are editable values used in the generated commands. The browser's
+   download directory is separate from the ZIP path on the server.
+3. Choose the installation option that matches your target machine:
+   - **First installation:** use a new project directory. The generated command
+     clones the repository there and runs `studio/setup.sh`. Upload the ZIP
+     outside that directory so the clone destination stays available.
+   - **Existing environment:** use an installed checkout with an executable
+     `.venv/bin/python`. The generated command checks that executable; it does
+     not install or repair dependencies. If you installed manually using the
+     sections below, select this option.
+4. Set the package name, for example `my_model`. Choose **CPU**, or choose
+   **CUDA** and enter the GPU index on the target server. Use the index visible
+   to that process when `CUDA_VISIBLE_DEVICES` is set. **Auto** exports GPU 0.
+   The original browser-only training panel selects the device type; manual
+   GPU indices are entered in the guide.
+5. Click **Download ZIP** and upload it to the exact server ZIP path you chose.
+   Acknowledge completion to advance through the guide. Copy and execute each
+   installation/check, resource preparation and training command in a terminal
+   on the target machine. **Copy full run flow** copies all three command stages
+   together. The webpage does not execute them or detect whether they finished.
+
+The ZIP contains `config/exported/my_model/` with `model.yaml`, `exp.yaml`,
+`data.yaml`, `embed.yaml`, `prepare.json`, `graph.json`, `README.txt`,
+`RUN_GUIDE.md`, `commands.sh` and `commands.txt`. The package name changes this
+path. Compare the catalog revision in `README.txt` when using another checkout.
+
+You can use the step-by-step guide, the copied full flow, or `commands.sh`.
+The script stops on errors and executes installation/checks, ZIP extraction,
+resource preparation and training. To access it before the first installation,
+extract a copy of the ZIP into a temporary directory using Python 3.11, then run
+the extracted script with Bash. Keep the original ZIP at the configured server
+path: the script extracts it into the project during preparation. For example,
+if your uploaded ZIP is `/tmp/legoizer-export.zip` and the package is named
+`my_model`:
+
+```bash
+python3.11 -m zipfile -e /tmp/legoizer-export.zip /tmp/legoizer-package
+bash /tmp/legoizer-package/config/exported/my_model/commands.sh
+```
+
+Run the first-installation flow only before that checkout is installed. Once the
+project exists, reopen the guide with the existing-environment option and export
+updated commands instead of repeating the clone. The generated setup command
+uses the default `python3.11` executable; if your interpreter has another path,
+use the manual setup instructions with `--python`, then choose the
+existing-environment option.
+
+#### Copy configuration files and run manually without a ZIP
+
+Install the project using the CPU or GPU setup instructions below. In the export
+guide, select the existing-environment option and enter your actual project
+path, then open **Configuration files**. Copy each configuration into its named
+file under the displayed package directory, such as
+`config/exported/my_model/`. Keep the four YAML files and `prepare.json` together;
+copying only `model.yaml` is insufficient. Save `graph.json` as well if you want
+to reopen the model in Studio later.
+
+The guide still requires a valid ZIP-path value to generate its files, even for
+manual copying. That value does not require an actual ZIP for the manual
+commands below. **Do not run the generated `commands.sh` or the complete copied
+flow without a ZIP:** both include a ZIP extraction command. After copying the
+files, use the following manual preparation and training commands instead.
+
+The package contains configuration, not datasets, pretrained weights or trained
+checkpoints. The preparation command downloads supported missing resources and
+preprocesses them **on the execution machine**. Before running it, align Hugging
+Face caches with the project's resource directory, particularly for External HF:
+
+```bash
+cd /path/to/Legoizer
+source .venv/bin/activate
+
+export HF_HOME="$PWD/studio/backend/workspace/resources/huggingface"
+export HF_HUB_CACHE="$HF_HOME/hub"
+export HUGGINGFACE_HUB_CACHE="$HF_HUB_CACHE"
+export TRANSFORMERS_CACHE="$HF_HUB_CACHE"
+
+python -m studio.backend.executor.provision config/exported/my_model/prepare.json
+```
+
+After preparation succeeds, run training from the same project root. This
+example uses a non-External-HF model and GPU 0:
+
+```bash
+python trainer.py \
+  --model config/exported/my_model/model.yaml \
+  --exp config/exported/my_model/exp.yaml \
+  --data config/exported/my_model/data.yaml \
+  --embed config/exported/my_model/embed.yaml \
+  --cuda 0 \
+  --seed 2023
+```
+
+Use `--cuda -1` for CPU, or the intended visible GPU index. External HF item
+encoders use `prepared-model.yaml` created by preparation; their exported command
+already selects this filename. Replace the example directory, model filename and
+seed to match your files and intended run. Keep preparation and training in the
+same shell so that the cache environment remains available. No Studio web service is needed
+for these CLI steps. Some dataset-specific embedding matrices must be supplied
+separately; see [data coverage and offline use](docs/DATA.md). Gated/private models
+require authorized access and `HF_TOKEN` in the server environment; never save
+credentials in exported configs or Git.
 
 ## Run on your own computer (CPU)
 
@@ -94,7 +303,9 @@ If local port 8000 is busy, use `127.0.0.1:18000:127.0.0.1:8000` and browse
 `http://127.0.0.1:18000/`. The browser runs locally; resource preparation,
 training, checkpoints, and evaluation all run on the GPU server.
 
-In Studio's **Training** settings, select **CUDA** and the intended GPU index.
+In Studio's **Training** settings, select the detected GPU entry you intend to
+use, such as **CUDA:0**. The export guide accepts a manually entered GPU index
+for the machine that will execute the exported commands.
 The default training device is CPU; installing a CUDA wheel alone does not
 change a saved graph's device. Reduce batch size or choose a smaller encoder
 if GPU memory is insufficient. When using `CUDA_VISIBLE_DEVICES`, GPU indices
@@ -128,7 +339,9 @@ bash studio/stop.sh
 ```
 
 The stop command targets the service manager for this checkout; it does not
-use machine-wide process-name matching. Logs are in `studio/logs/`.
+use machine-wide process-name matching. It manages services launched through
+`studio/run.sh`; it does not stop a separately launched uvicorn process. Logs are
+in `studio/logs/`.
 
 ## Automatic data and optional local configuration
 
@@ -161,9 +374,39 @@ Do not put it in YAML, `.model`, README files, or Git. Training credentials are
 passed to the child process and excluded from saved graphs and run records.
 Downloading a model does not grant access to other restricted resources.
 
-The **Official Benchmark** view retrieves results from an external API. An
-unavailable API does not prevent local graph editing and training; benchmark
-results are separate from your local runs.
+The **Official Benchmark** view uses the live external API in server mode. Pages
+mode uses a bundled static snapshot of 828 configurations and their details,
+labeled November 16 data; it does not store the actual capture time. Benchmark
+results are separate from local runs. An unavailable live API does not prevent
+server-mode graph editing or training.
+
+## Publish or maintain a Pages site
+
+Ordinary Pages visitors do not need these build steps. Maintainers can build with
+the committed static catalogs using Node/npm only:
+
+```bash
+cd studio/frontend
+npm ci
+STUDIO_BASE_PATH=/Legoizer/ npm run build:pages
+STUDIO_BASE_PATH=/Legoizer/ npm run preview:pages
+```
+
+Use the repository's actual Pages base path; use `/` for a root/custom-domain
+site. The preview is local; it does not publish. On GitHub, select **Settings →
+Pages → GitHub Actions**, then manually run **Actions → Studio GitHub Pages →
+Run workflow**. A push alone does not publish with the current workflow.
+
+| Build command | Runtime | Output |
+| --- | --- | --- |
+| `npm run build` | Frontend + Python backend | `studio/frontend/dist/` |
+| `npm run build:pages` | Browser-only editor | `studio/frontend/dist-pages/` |
+
+The directories are independent. Never substitute the Pages output for the
+server's `dist/`. After changing Python components/templates, regenerate the
+public catalog from the project root with `.venv/bin/python -m
+studio.scripts.export_catalog`, then review and commit the generated catalog.
+Static Benchmark refresh instructions are in [the mode guide](docs/STUDIO_MODES.md).
 
 ## Configuration and development
 

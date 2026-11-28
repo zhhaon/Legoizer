@@ -5,7 +5,8 @@ import { Play } from 'lucide-react';
 import { MetricSettings } from '@/components/MetricSettings';
 import { useTrainingCredentials } from '@/components/TrainingCredentials';
 import { useStudio } from '@/store/graphStore';
-import { devicePatch, deviceValue } from '@/utils/deviceOptions';
+import { DeviceSettings } from '@/components/DeviceSettings';
+import { localMode } from '@/runtime/mode';
 
 export function TrainingSettings() {
   useLocale();
@@ -15,10 +16,6 @@ export function TrainingSettings() {
   const train = useStudio((state) => state.train);
   const training = useStudio((state) => state.training);
   const environment = useStudio((state) => state.environment);
-  const devices = environment?.cuda_devices || Array.from(
-    { length: environment?.cuda_device_count || 0 }, (_, index) => ({ index, name: 'GPU' }));
-  const missingDevice = settings.device === 'cuda' && settings.cuda_index != null
-    && !devices.some((gpu) => gpu.index === settings.cuda_index);
   const httpsPort = useStudio((state) => state.environment?.https_port);
   const { token, setToken, startTraining, acceptsToken } = useTrainingCredentials();
   const secureUrl = new URL(window.location.href);
@@ -39,18 +36,7 @@ export function TrainingSettings() {
         onChange={(value) => update({ hidden_size: value })} />
       <NumberField label={tr("ui.epochs_8f4dcf")} value={settings.epochs} min={1} max={200}
         onChange={(value) => update({ epochs: value })} />
-      <label className="field-label"> {tr("ui.device_a5a74a")} <select className="field-input" value={deviceValue(settings)}
-          onChange={(event) => update(devicePatch(event.target.value))}>
-          <option value="cpu">CPU</option>
-          <option value="cuda">{tr("ui.cuda_auto__d8bb29")}</option>
-          <option value="auto">{tr("ui.auto_c614ba")}</option>
-          {devices.map((gpu) => <option key={gpu.index} value={`cuda:${gpu.index}`}>
-            CUDA:{gpu.index}
-          </option>)}
-          {missingDevice && <option value={`cuda:${settings.cuda_index}`} disabled>
-            CUDA:{settings.cuda_index} {tr("ui._unavailable__b2cac2")} </option>}
-        </select>
-      </label>
+      <DeviceSettings settings={settings} environment={environment} local={localMode} onChange={update} />
       <MetricSettings />
       {acceptsToken ? (
         <label className="field-label"> {tr("ui.hugging_face_access_token_optional__70e03b")} <input type="password" className="field-input" aria-label={tr("ui.hugging_face_access_token_optional__70e03b")} value={token}

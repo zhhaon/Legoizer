@@ -20,6 +20,31 @@ describe('explicit local mode', () => {
     await expect(api.train(g)).rejects.toThrow();
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
+  it('exports the selected remote GPU index and rejects invalid imported indices', async () => {
+    vi.stubEnv('VITE_STUDIO_MODE', 'local');
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => catalog })));
+    const { buildBundle } = await import('./bundle');
+    const g = structuredClone(catalog.templates.find((t: any) => t.id === 'naml').graph);
+    for (const index of [0, 3, 12]) {
+      g.train.device = 'cuda'; g.train.cuda_index = index;
+      const bundle = await buildBundle(g, 'gpu_test');
+      expect(bundle.commands).toContain(`--cuda ${index} \\`);
+      expect(JSON.parse(bundle.files['graph.json']).train.cuda_index).toBe(index);
+    }
+    g.train.cuda_index = -1;
+    await expect(buildBundle(g, 'gpu_test')).rejects.toThrow();
+    g.train.device = 'cpu'; g.train.cuda_index = null;
+    expect((await buildBundle(g, 'cpu_test')).commands).toContain('--cuda -1');
+  });
+  it('opens the local server-run guide instead of submitting training', async () => {
+    vi.stubEnv('VITE_STUDIO_MODE', 'local');
+    const fetcher = vi.fn(); vi.stubGlobal('fetch', fetcher);
+    const { useStudio } = await import('@/store/graphStore');
+    useStudio.setState({ runGuideOpen: false });
+    await useStudio.getState().train();
+    expect(useStudio.getState().runGuideOpen).toBe(true);
+    expect(fetcher).not.toHaveBeenCalled();
+  });
   it('switches new messages between Chinese and English', async () => {
     const { rt } = await import('./messages');
     const i18n = (await import('@/i18n')).default;

@@ -43,7 +43,7 @@ function ValueShape({ data, itemDimension }: { data: DetailData; itemDimension: 
     return rounded.toFixed(2).replace('-', '−');
   });
   const vector = dim && dim <= 4 ? formatted.slice(0, dim) : [...formatted.slice(0, 3), '⋮', formatted[3]];
-  return <div className="flow-value" style={{ color, width: score ? 'max-content' : 76 }} title={tr("ui.fixed_example_values_dimensions_follow_model_configu_1b59ed")}>
+  return <div className="flow-value" style={{ color, width: score ? 'max-content' : 76 }}>
     <Handle type="target" position={Position.Left} id="in" isConnectable={false} style={{ visibility: 'hidden' }} />
     {score ? <div className={`rounded-lg border px-3 py-2 text-center font-mono ${data.positiveScore ? 'border-b-4 shadow-sm' : ''}`}
       style={{ borderColor: hexAlpha(color, .45), background: hexAlpha(color, .08), fontSize: 17 }}>

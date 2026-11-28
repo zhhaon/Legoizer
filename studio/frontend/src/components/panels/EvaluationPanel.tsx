@@ -47,7 +47,6 @@ function ServerEvaluationPanel() {
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div>
           <h3 className="flex items-center gap-1.5 text-[11px] font-bold"><BarChart3 size={13} /> {tr("ui.evaluation_dashboard_84a430")}</h3>
-          <p className="mt-0.5 text-[9.5px] text-muted">{tr("ui.only_real_metrics_emitted_by_trainer_py_tester_py_ar_aeef08")}</p>
         </div>
         <div className="flex items-center gap-1.5">
           <select
@@ -85,7 +84,6 @@ function ServerEvaluationPanel() {
               <div key={name} className="rounded-lg border border-line bg-surface p-2.5 shadow-panel">
                 <p className="text-[9.5px] font-semibold uppercase tracking-wide text-muted">{METRIC_LABELS[name] || name}</p>
                 <p className="mt-1 font-mono text-[19px] font-bold leading-none" style={{ color: 'var(--accent)' }}>{value.toFixed(4)}</p>
-                <p className="mt-1 text-[8.5px] text-muted">{tr("ui.test_set_real_output_febcc0")}</p>
               </div>
             ))}
           </div>

@@ -42,6 +42,7 @@ export interface ReplaceResult {
 }
 
 interface StudioState {
+  runGuideOpen: boolean;
   graph: GraphJson;
   graphLoadVersion: number;
   catalog: ComponentCatalog | null;
@@ -287,6 +288,7 @@ export const useStudio = create<StudioState>((set, get) => {
     theme: (storage.getItem(THEME_KEY) as 'light' | 'dark') || 'light',
     welcomeVisible: storage.getItem(WELCOME_KEY) !== 'true',
     toasts: [],
+    runGuideOpen: false,
     currentRunId: null,
     currentRun: null,
     runs: [],
@@ -877,7 +879,7 @@ export const useStudio = create<StudioState>((set, get) => {
     },
 
     train: async (preflightOnly = false, hfToken) => {
-      if (localMode) { set({ bottomTab: 'yaml', bottomOpen: true }); notify('info', rt('serverOnly')); return; }
+      if (localMode) { set({ bottomTab: 'yaml', bottomOpen: true, runGuideOpen: true }); return; }
       set({ bottomTab: 'training', bottomOpen: true });
       const report = await get().validateGraph();
       if (!report?.valid) {

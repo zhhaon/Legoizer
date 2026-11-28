@@ -71,7 +71,6 @@ export function YamlPanel() {
             <>
               <div className={`mb-2 rounded-md border p-2 ${result.compatible_with_reference ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30' : 'border-red-200 bg-red-50 text-red-700 dark:bg-red-950/30'}`}>
                 <b>{localMode ? rt("staticCheck") : result.compatible_with_reference ? tr("ui.verified_by_legommenders_82323e") : tr("ui.verification_issues_5de79d")}</b>
-                <p className="mt-1 opacity-80">{localMode ? rt("staticCheck") : tr("ui.trainer_get_configurations_classhub_and_real_config__614349")}</p>
               </div>
               <div className="mb-2 space-y-1 text-muted">
                 <p><b>{tr("ui.model__9e1279")}</b> {result.model_label}</p>
@@ -80,7 +79,7 @@ export function YamlPanel() {
                 <p><b>{tr("ui.generated_file__38e996")}</b> <span className="font-mono text-[9px]">{result.generated_file}</span></p>
               </div>
               <div className="space-y-1">
-                {result.notes.map((note, index) => (
+                {result.notes.map((note, index) => result.note_translations?.[index]?.key === 'backend.88f69647be80' ? null : (
                   <p key={index} className="rounded border border-line bg-[var(--hover)] px-2 py-1 text-muted">· {result.note_translations?.[index] ? tr(result.note_translations[index]!.key, result.note_translations[index]!.params, note) : note}</p>
                 ))}
               </div>

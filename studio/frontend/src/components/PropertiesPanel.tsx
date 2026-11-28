@@ -92,11 +92,10 @@ export function PropertiesPanel() {
                 <label className="field-label">{tr("ui.component_name_28b2db")}</label>
                 <input
                   className="field-input"
-                  value={node.label || ''}
-                  placeholder={componentText(component, 'name')}
+                  value={node.label ?? componentText(component, 'name')}
+                  aria-label={tr('ui.component_name_28b2db')}
                   onChange={(event) => setNodeLabel(node.id, event.target.value)}
                 />
-                <p className="field-help">{tr("ui.display_name_on_the_canvas_does_not_affect_the_compi_27fd21")}</p>
               </div>
               {dataset && itemOwnsTokens && (
                 <div data-property-parameter="lm"><label className="field-label">{tr("ui.lm_aea416")}</label>
@@ -175,7 +174,7 @@ function ParamField({ param, value, onChange }: {
   useLocale();
   const label = paramLabel(param.name);
   const range = param.minimum != null || param.maximum != null ? tr('parameter.range', { min: param.minimum ?? '-∞', max: param.maximum ?? '∞' }) : '';
-  const hint = tr('parameter.hint', { description: paramDescription(param) + range, value: param.default_hint ?? fmt(param.default) });
+  const hint = tr('parameter.hint', { description: paramDescription(param) + range, value: param.default_hint ? text(param.default_hint) : fmt(param.default) });
 
   if (param.type === 'boolean') {
     return (

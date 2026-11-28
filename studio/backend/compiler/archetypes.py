@@ -55,12 +55,6 @@ def detect(
     exact = next((entry for entry in matches if entry.get("exact", True)), None)
     chosen = exact or matches[0]
     notes: list[str] = []
-    if exact is None:
-        notes.append(
-            localized('backend.88f69647be80', "The compiled structure follows the README model table but is not an "
-            "exact copy of the reference YAML. Check the YAML preview for the real "
-            "meta.* values before claiming a paper reproduction.", {})
-        )
     if chosen["key"] in ("lstur", "lstur_cat"):
         if item_component == "item.cnn":
             notes.append(

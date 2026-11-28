@@ -186,7 +186,7 @@ def _make_param(
         minimum=note.get("minimum"),
         maximum=note.get("maximum"),
         choices=note.get("choices", []),
-        description=note.get("description", f"Real configuration key `{name}`."),
+        description=note.get("description", ""),
         source=source,  # type: ignore[arg-type]
         config_path=config_path,
         advanced=bool(note.get("advanced", False)),

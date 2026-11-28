@@ -12,3 +12,9 @@ it('clears explicit GPU selection when switching modes', () => {
     expect(devicePatch(device).cuda_index).toBeNull();
   }
 });
+
+it('accepts non-negative integer GPU indices and rejects invalid values', async () => {
+  const { parseGpuIndex } = await import('./deviceOptions');
+  for (const index of ['0', '1', '3', '12']) expect(parseGpuIndex(index)).toBe(Number(index));
+  for (const invalid of ['', ' ', '-1', '1.5', 'NaN', 'Infinity', '1e3', '9007199254740992']) expect(parseGpuIndex(invalid)).toBeNull();
+});

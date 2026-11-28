@@ -88,6 +88,7 @@ export function validateLocal(g: GraphJson, s: Snapshot): ValidationReport {
   });
   for (const k of ['batch_size', 'accumulate_batch', 'hidden_size', 'epochs', 'patience'] as const) if (!Number.isInteger(g.train[k]) || g.train[k] < 1) add(`train:${k}`);
   if (!Number.isFinite(g.train.lr) || g.train.lr <= 0 || !Number.isInteger(g.train.seed)) add('train');
+  if (g.train.cuda_index != null && (!Number.isSafeInteger(g.train.cuda_index) || g.train.cuda_index < 0)) add('train:cuda_index');
   if (!g.train.metrics.length || !g.train.dev_metric) add('metrics');
   const first = (r: string) => roles(g, s, r)[0]?.component || null;
   return { valid: !errors.length, errors, warnings: [], runtime_checks: [{ code: 'server_runtime', severity: 'info', message: rt('staticCheck'), reason: '', fix: '', node_id: null, edge_id: null }], summary: { nodes: g.nodes.length, edges: g.edges.length, task: g.task, model_label: archetype(g, s)?.name || 'Custom Model', exact_template: null, dataset: first('dataset'), item_encoder: first('item_encoder'), user_encoder: first('user_encoder'), predictor: first('predictor') } };
